@@ -16,6 +16,63 @@ fun main() {
         array[i] = line.toCharArray()
     }
     solutionV1(array)
+    solutionV2(array)
+}
+
+fun solutionV2(array: Array<CharArray>) {
+    var result = 0
+    for ((x, row) in array.withIndex()) {
+        for ((y, char) in row.withIndex()) {
+            if (char == '*') {
+                result += tryCreateGear(x, y, array)
+            }
+        }
+    }
+    println(result)
+}
+
+fun tryCreateGear(xGear: Int, yGear: Int, array: Array<CharArray>): Int {
+    var numberSoFar = ""
+    var isNumberValid = false
+
+    val adjacentNumbers = mutableListOf<Int>()
+
+    for (x in xGear - 1..xGear + 1) {
+        for ((y, char) in array[x].withIndex()) {
+            if (char.isDigit()) {
+                numberSoFar += char
+                isNumberValid = isNumberValid || isNearPotentialGear(x, y, xGear, yGear)
+                continue
+            }
+            if (isNumberValid) {
+                adjacentNumbers.add(numberSoFar.toInt())
+                numberSoFar = ""
+                isNumberValid = false
+            } else {
+                numberSoFar = ""
+                isNumberValid = false
+            }
+
+        }
+        if (isNumberValid) {
+            adjacentNumbers.add(numberSoFar.toInt())
+            numberSoFar = ""
+            isNumberValid = false
+        } else {
+            numberSoFar = ""
+            isNumberValid = false
+        }
+    }
+    if (adjacentNumbers.size == 2) {
+        return adjacentNumbers[0] * adjacentNumbers[1]
+    }
+    return 0
+}
+
+fun isNearPotentialGear(x: Int, y: Int, xGear: Int, yGear: Int): Boolean {
+    val xRange = xGear - 1..xGear + 1
+    val yRange = yGear - 1..yGear + 1
+    return xRange.contains(x) && yRange.contains(y)
 }
 
 private fun solutionV1(array: Array<CharArray>) {
