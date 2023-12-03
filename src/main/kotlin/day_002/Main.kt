@@ -2,7 +2,7 @@ package day_002
 
 import java.io.File
 
-private const val inputPath = "/Users/lukaszdutka/IdeaProjects/fun/advent-of-code-2023/src/main/kotlin/day_002/input2.txt"
+private const val inputPath = "src/main/kotlin/day_002/input2.txt"
 
 fun main() {
     var count = 0
