@@ -46,22 +46,15 @@ fun tryCreateGear(xGear: Int, yGear: Int, array: Array<CharArray>): Int {
             }
             if (isNumberValid) {
                 adjacentNumbers.add(numberSoFar.toInt())
-                numberSoFar = ""
-                isNumberValid = false
-            } else {
-                numberSoFar = ""
-                isNumberValid = false
             }
-
+            numberSoFar = ""
+            isNumberValid = false
         }
         if (isNumberValid) {
             adjacentNumbers.add(numberSoFar.toInt())
-            numberSoFar = ""
-            isNumberValid = false
-        } else {
-            numberSoFar = ""
-            isNumberValid = false
         }
+        numberSoFar = ""
+        isNumberValid = false
     }
     if (adjacentNumbers.size == 2) {
         return adjacentNumbers[0] * adjacentNumbers[1]
@@ -89,7 +82,6 @@ private fun solutionV1(array: Array<CharArray>) {
                 validNumbersMap.add(Pair(x + 1, y - 1))
                 validNumbersMap.add(Pair(x + 1, y))
                 validNumbersMap.add(Pair(x + 1, y + 1))
-
             }
         }
     }
