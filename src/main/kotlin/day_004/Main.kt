@@ -12,12 +12,11 @@ fun main() {
     val lines = File(inputPath)
         .readLines()
 
-//    solutionV1(lines)
+    solutionV1(lines)
     solutionV2(lines)
 }
 
 fun solutionV2(lines: List<String>) {
-    var totalScratchCards = 0;
     val gameNumberToQuantity = mutableMapOf<Int, Int>()
 
     for (line in lines) {
@@ -43,7 +42,7 @@ fun solutionV2(lines: List<String>) {
 }
 
 fun solutionV1(lines: List<String>) {
-    var points = 0;
+    var points = 0
     for (line in lines) {
         val s = line.split(":")[1]
         val winning = s.split("|")[0]
@@ -58,7 +57,6 @@ fun solutionV1(lines: List<String>) {
                 count++
             }
         }
-//        count = count.coerceAtMost(4)
         points += 2.0.pow(count.toDouble() - 1).toInt()
     }
     println(points)
