@@ -10,7 +10,7 @@ private const val inputPath =
 fun main() {
     val file = File(inputPath)
 
-//    solutionV1(file.readLines())
+    solutionV1(file.readLines())
     solutionV2(file.readLines())
 }
 
