@@ -15,18 +15,13 @@ fun main() {
 }
 
 fun solutionV2(lines: List<String>) {
-    var sum = 0
-    for (line in lines) {
-        sum += solveV2(line)
-    }
-    println(sum)
+    println(lines.sumOf(::solveV2))
 }
 
 fun solveV2(line: String): Int {
     val startingInts = line.split(" ").filter { it.isNotBlank() }.map { it.toInt() }.reversed()
-    println("startingInts=$startingInts")
     var ints = startingInts
-    var pairs = createPairs(ints)
+    var pairs = ints.zipWithNext()
 
     ints = mutableListOf()
     val lasts = mutableListOf<Int>()
@@ -36,71 +31,37 @@ fun solveV2(line: String): Int {
         for (pair in pairs) {
             ints.add(pair.first - pair.second)
         }
-        pairs = createPairs(ints)
+        pairs = ints.zipWithNext()
         lasts.add(ints[ints.size - 1])
         if (ints.all { it == 0 }) {
             shouldContinue = false
         }
-        println("ints=$ints")
         ints.clear()
     }
 
-    println("lastsReversed=${lasts.reversed()}")
     val realLasts = mutableListOf<Int>()
     for (last in lasts.reversed()) {
-        // prawy - X(lewy) = dół
-        // last - x = realLasts.lastOrNull() ?: 0
-        // x = last - realLasts.lastOrNull() ?: 0
-
-        // x - last = realLasts(size)
-        // x = realLasts + last
         val x = last - (realLasts.lastOrNull() ?: 0)
         realLasts.add(x)
     }
-    println(realLasts)
     return realLasts.last()
 }
 
 fun solutionV1(lines: List<String>) {
+    println(lines.sumOf(::solve))
+}
+
+fun solve(lineString: String): Int {
+    var line = lineString.split(" ").map { it.toInt() }
     var sum = 0
-    for (line in lines) {
-//    for (line in lines.subList(0, 1)) {
-        sum += solve(line)
-    }
-    println(sum)
-}
 
-fun solve(line: String): Int {
-    val startingInts = line.split(" ").filter { it.isNotBlank() }.map { it.toInt() }
-    var ints = startingInts
-    var pairs = createPairs(ints)
-
-    ints = mutableListOf()
-    val lasts = mutableListOf<Int>()
-    var shouldContinue = true
-    lasts.add(startingInts.last())
-    while (shouldContinue) {
-        for (pair in pairs) {
-            ints.add(pair.second - pair.first)
+    while (true) {
+        sum += line.last()
+        line = line.zipWithNext { first, second -> second - first }
+        if (line.all { it == 0 }) {
+            break
         }
-        pairs = createPairs(ints)
-        lasts.add(ints[ints.size - 1])
-        if (ints.all { it == 0 }) {
-            shouldContinue = false
-        }
-        ints.clear()
     }
-
-    val realLasts = mutableListOf<Int>()
-    for (last in lasts.reversed()) {
-        // x - last = realLasts(size)
-        // x = realLasts + last
-        val x = (realLasts.lastOrNull() ?: 0) + last
-        realLasts.add(x)
-    }
-    return realLasts.last()
+    return sum
 }
 
-fun createPairs(ints: List<Int>): List<Pair<Int, Int>> {
-    return ints.zip(ints.subList(1, ints.size))
-}
