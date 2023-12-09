@@ -18,12 +18,12 @@ fun solutionV2(lines: List<String>) {
 }
 
 fun solveV2(lineString: String): Int {
-    var line = lineString.split(" ").map { it.toInt() }.reversed()
+    var line = lineString.split(" ").map { it.toInt() }
     val lasts = mutableListOf<Int>()
 
     while (line.any { it != 0 }) {
-        lasts.add(line.last())
-        line = line.zipWithNext { first, second -> first - second }
+        lasts.add(line.first())
+        line = line.zipWithNext { first, second -> second - first }
     }
     return lasts.reduceRight { x, acc -> x - acc }
 }
