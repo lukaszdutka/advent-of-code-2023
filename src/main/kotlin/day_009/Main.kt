@@ -28,7 +28,7 @@ fun solveV2(lineString: String): Int {
             break
         }
     }
-    return lasts.reversed().reduce { acc, x -> x - acc }
+    return lasts.reduceRight { x, acc -> x - acc }
 }
 
 fun solutionV1(lines: List<String>) {
