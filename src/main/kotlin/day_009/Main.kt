@@ -21,12 +21,9 @@ fun solveV2(lineString: String): Int {
     var line = lineString.split(" ").map { it.toInt() }.reversed()
     val lasts = mutableListOf<Int>()
 
-    while (true) {
+    while (line.any { it != 0 }) {
         lasts.add(line.last())
         line = line.zipWithNext { first, second -> first - second }
-        if (line.all { it == 0 }) {
-            break
-        }
     }
     return lasts.reduceRight { x, acc -> x - acc }
 }
@@ -39,12 +36,9 @@ fun solve(lineString: String): Int {
     var line = lineString.split(" ").map { it.toInt() }
     var sum = 0
 
-    while (true) {
+    while (line.any { it != 0 }) {
         sum += line.last()
         line = line.zipWithNext { first, second -> second - first }
-        if (line.all { it == 0 }) {
-            break
-        }
     }
     return sum
 }
