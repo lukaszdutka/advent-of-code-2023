@@ -8,7 +8,6 @@ private const val inputPath =
     "/Users/lukaszdutka/IdeaProjects/fun/advent-of-code-2023/src/main/kotlin/day_010/input.txt"
 //    "/Users/lukaszdutka/IdeaProjects/fun/advent-of-code-2023/src/main/kotlin/day_010/input_small.txt"
 
-//S is the starting position of the animal; there is a pipe on this tile, but your sketch doesn't show what shape the pipe has.
 fun main() {
     val lines = File(inputPath).readLines()
 
@@ -20,103 +19,56 @@ fun main() {
     solutionV2(array, pipes)
 }
 
-val validPipesForDirection = mutableMapOf<String, Set<Char>>()
 fun solutionV1(pipesMap: Array<CharArray>): MutableSet<Pair<Int, Int>> {
-    val startY = 107
-    val startX = 110
-//    val startY = 2
-//    val startX = 0
-    pipesMap[startY][startX] = 'F'
-
-    validPipesForDirection["down"] = setOf('|', 'L', 'J')
-    validPipesForDirection["up"] = setOf('|', 'F', '7')
-    validPipesForDirection["left"] = setOf('-', 'F', 'L')
-    validPipesForDirection["right"] = setOf('-', 'J', '7')
+    val start = Pair(107, 110)
+    pipesMap[start.first][start.second] = 'F'
 
     val toVisit = Stack<Node>()
+    toVisit.addElement(Node("S", start, 0))
 
-    toVisit.addElement(Node("S", startY, startX, 0))
-//    toVisit.addElement(Node("down", 107+1, 110 + 1, 1))
-//    toVisit.addElement(Node("right", 107 , 110, 1))
-    val processedValidNode = mutableMapOf<Pair<Int, Int>, Int>()
-
-    val onlyRealValidPipesForV2 = mutableSetOf<Pair<Int, Int>>()
-    while (!toVisit.isEmpty()) {
+    val coordToDistance = mutableMapOf<Pair<Int, Int>, Int>()
+    while (toVisit.isNotEmpty()) {
         val node = toVisit.pop()!!
-        if (processedValidNode.contains(Pair(node.y, node.x))) {
+        val coords = node.coords
+        if (coordToDistance.contains(coords)) {
             continue
         }
         val validNodes = listOf(
-//            Node("up", node.y + 1, node.x, node.distance + 1),
-//            Node("down", node.y - 1, node.x, node.distance + 1),
-//            Node("right", node.y, node.x - 1, node.distance + 1),
-//            Node("left", node.y, node.x + 1, node.distance + 1)
-            Node("down", node.y + 1, node.x, node.distance + 1),
-            Node("up", node.y - 1, node.x, node.distance + 1),
-            Node("left", node.y, node.x - 1, node.distance + 1),
-            Node("right", node.y, node.x + 1, node.distance + 1)
-        ).filter { isValid(pipesMap, it, node) }
+            Node("down", Pair(coords.first + 1, coords.second), node.distance + 1),
+            Node("up", Pair(coords.first - 1, coords.second), node.distance + 1),
+            Node("left", Pair(coords.first, coords.second - 1), node.distance + 1),
+            Node("right", Pair(coords.first, coords.second + 1), node.distance + 1)
+        ).filter { isValid(pipesMap, it, node.coords) }
         toVisit.addAll(validNodes)
-        onlyRealValidPipesForV2.addAll(validNodes.map { Pair(it.y, it.x) })
-        processedValidNode[Pair(node.y, node.x)] = node.distance
+        coordToDistance[coords] = node.distance
     }
-    println((processedValidNode.values.max() + 1) / 2)
-    return onlyRealValidPipesForV2
+    println("solutionV1=${(coordToDistance.values.max() + 1) / 2}")
+    return coordToDistance.keys
 }
 
-fun isValid(pipesMap: Array<CharArray>, node: Node, cameFromHere: Node): Boolean {
-    if (node.x < 0 || node.y < 0 || node.x >= pipesMap.size || node.y >= pipesMap.size) {
+fun isValid(pipesMap: Array<CharArray>, node: Node, cameFromHere: Pair<Int, Int>): Boolean {
+    val coords = node.coords
+    if (coords.first !in pipesMap.indices || coords.second !in pipesMap.indices) {
         return false
     }
-
-//    return validPipesForDirection[node.direction]!!.contains(pipesMap[node.y][node.x])
-
-    val char = pipesMap[cameFromHere.y][cameFromHere.x]
-    return when (char) {
+    return when (val char = pipesMap[cameFromHere.first][cameFromHere.second]) {
         'F' -> listOf("right", "down").contains(node.direction)
         'L' -> listOf("right", "up").contains(node.direction)
         'J' -> listOf("left", "up").contains(node.direction)
         '7' -> listOf("left", "down").contains(node.direction)
         '|' -> listOf("up", "down").contains(node.direction)
         '-' -> listOf("right", "left").contains(node.direction)
-        else -> false
+        else -> throw RuntimeException("invalid char: $char")
     }
-
 }
 
-class Node(val direction: String, val y: Int, val x: Int, val distance: Int) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Node
-
-        if (y != other.y) return false
-        if (x != other.x) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = y
-        result = 31 * result + x
-        return result
-    }
-
-    override fun toString(): String {
-        return "Node(direction='$direction', y=$y, x=$x, distance=$distance)"
-    }
-
-
-}
+class Node(val direction: String, val coords: Pair<Int, Int>, val distance: Int)
 
 fun solutionV2(oldArray: Array<CharArray>, usedPipes: MutableSet<Pair<Int, Int>>) {
-//    println(array.fold("") { acc, row1 -> acc + "\n" + row1.fold("") { a, b -> a + "" + b } })
     val lines = newMap(oldArray, usedPipes).split("\n")
     val array = Array(lines.size) { CharArray(lines[0].length) }
     for ((i, line) in lines.withIndex()) {
         array[i] = line.toCharArray()
-        println(line)
     }
 
     //todo think
@@ -152,8 +104,7 @@ fun solutionV2(oldArray: Array<CharArray>, usedPipes: MutableSet<Pair<Int, Int>>
         toCheck.push(Pair(coords.first, coords.second + 1))
         toCheck.push(Pair(coords.first, coords.second - 1))
     }
-    println("counter= $counter")
-    println("counter/9= ${counter / 9}")
+    println("soultionV2=${counter / 9}")
 }
 
 private fun newMap(
@@ -161,14 +112,12 @@ private fun newMap(
     usedPipes: MutableSet<Pair<Int, Int>>
 ): String {
     for ((y, row) in array.withIndex()) {
-        for ((x, _) in row.withIndex()) {
+        for (x in row.indices) {
             if (!usedPipes.contains(Pair(y, x))) {
                 array[y][x] = '.'
             }
         }
     }
-
-//    println(array.fold("") { acc, row1 -> acc + "\n" + row1.fold("") { a, b -> a + "" + b } })
 
     var startingString = ""
     for (row in array) {
@@ -177,10 +126,10 @@ private fun newMap(
         var array2 = ""
 
         for (char in row) {
-            val fValue = stringValue(char)
-            array0 += fValue.split("\n")[0]
-            array1 += fValue.split("\n")[1]
-            array2 += fValue.split("\n")[2]
+            val charLines = stringValue(char).split("\n")
+            array0 += charLines[0]
+            array1 += charLines[1]
+            array2 += charLines[2]
         }
         startingString += array0 + "\n"
         startingString += array1 + "\n"
@@ -192,12 +141,6 @@ private fun newMap(
 private fun stringValue(char: Char) =
     when (char) {
         '.' -> "111\n111\n111"
-//        '|' -> "|x0\n0x0\n0x0"
-//        '-' -> "-00\nxxx\n000"
-//        'F' -> "F00\n0xx\n0x0"
-//        '7' -> "700\nxx0\n0x0"
-//        'L' -> "Lx0\n0xx\n000"
-//        'J' -> "Jx0\nxx0\n000"
         '|' -> "0x0\n0x0\n0x0"
         '-' -> "000\nxxx\n000"
         'F' -> "000\n0xx\n0x0"
