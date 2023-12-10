@@ -47,11 +47,15 @@ fun solutionV1(pipesMap: Array<CharArray>): MutableSet<Pair<Int, Int>> {
             continue
         }
         val validNodes = listOf(
+//            Node("up", node.y + 1, node.x, node.distance + 1),
+//            Node("down", node.y - 1, node.x, node.distance + 1),
+//            Node("right", node.y, node.x - 1, node.distance + 1),
+//            Node("left", node.y, node.x + 1, node.distance + 1)
             Node("down", node.y + 1, node.x, node.distance + 1),
             Node("up", node.y - 1, node.x, node.distance + 1),
             Node("left", node.y, node.x - 1, node.distance + 1),
             Node("right", node.y, node.x + 1, node.distance + 1)
-        ).filter { isValid(pipesMap, it) }
+        ).filter { isValid(pipesMap, it, node) }
         toVisit.addAll(validNodes)
         onlyRealValidPipesForV2.addAll(validNodes.map { Pair(it.y, it.x) })
         processedValidNode[Pair(node.y, node.x)] = node.distance
@@ -60,11 +64,24 @@ fun solutionV1(pipesMap: Array<CharArray>): MutableSet<Pair<Int, Int>> {
     return onlyRealValidPipesForV2
 }
 
-fun isValid(pipesMap: Array<CharArray>, node: Node): Boolean {
+fun isValid(pipesMap: Array<CharArray>, node: Node, cameFromHere: Node): Boolean {
     if (node.x < 0 || node.y < 0 || node.x >= pipesMap.size || node.y >= pipesMap.size) {
         return false
     }
-    return validPipesForDirection[node.direction]!!.contains(pipesMap[node.y][node.x])
+
+//    return validPipesForDirection[node.direction]!!.contains(pipesMap[node.y][node.x])
+
+    val char = pipesMap[cameFromHere.y][cameFromHere.x]
+    return when (char) {
+        'F' -> listOf("right", "down").contains(node.direction)
+        'L' -> listOf("right", "up").contains(node.direction)
+        'J' -> listOf("left", "up").contains(node.direction)
+        '7' -> listOf("left", "down").contains(node.direction)
+        '|' -> listOf("up", "down").contains(node.direction)
+        '-' -> listOf("right", "left").contains(node.direction)
+        else -> false
+    }
+
 }
 
 class Node(val direction: String, val y: Int, val x: Int, val distance: Int) {
@@ -96,7 +113,6 @@ class Node(val direction: String, val y: Int, val x: Int, val distance: Int) {
 fun solutionV2(oldArray: Array<CharArray>, usedPipes: MutableSet<Pair<Int, Int>>) {
 //    println(array.fold("") { acc, row1 -> acc + "\n" + row1.fold("") { a, b -> a + "" + b } })
     val lines = newMap(oldArray, usedPipes).split("\n")
-
     val array = Array(lines.size) { CharArray(lines[0].length) }
     for ((i, line) in lines.withIndex()) {
         array[i] = line.toCharArray()
@@ -107,8 +123,11 @@ fun solutionV2(oldArray: Array<CharArray>, usedPipes: MutableSet<Pair<Int, Int>>
     val midY = 107 * 3 + 1
     val midX = 110 * 3 + 1
     val startY = midY - 1
-    val startX = midX + 1
-    //26
+    val startX = midX - 1
+    //+1+1 error
+    //-1-1 52
+    //-1+1 52
+    //+1-1 52
 
     val checkedCoords = mutableSetOf<Pair<Int, Int>>()
     val toCheck = Stack<Pair<Int, Int>>()
@@ -125,17 +144,13 @@ fun solutionV2(oldArray: Array<CharArray>, usedPipes: MutableSet<Pair<Int, Int>>
         if (value == 'x') {
             continue
         }
-        if (value == '0') {
-            toCheck.push(Pair(coords.first + 1, coords.second))
-            toCheck.push(Pair(coords.first - 1, coords.second))
-            toCheck.push(Pair(coords.first, coords.second + 1))
-            toCheck.push(Pair(coords.first, coords.second - 1))
-            continue
-        }
         if (value == '1') {
             counter += 1
-            continue
         }
+        toCheck.push(Pair(coords.first + 1, coords.second))
+        toCheck.push(Pair(coords.first - 1, coords.second))
+        toCheck.push(Pair(coords.first, coords.second + 1))
+        toCheck.push(Pair(coords.first, coords.second - 1))
     }
     println("counter= $counter")
     println("counter/9= ${counter / 9}")
@@ -177,6 +192,12 @@ private fun newMap(
 private fun stringValue(char: Char) =
     when (char) {
         '.' -> "111\n111\n111"
+//        '|' -> "|x0\n0x0\n0x0"
+//        '-' -> "-00\nxxx\n000"
+//        'F' -> "F00\n0xx\n0x0"
+//        '7' -> "700\nxx0\n0x0"
+//        'L' -> "Lx0\n0xx\n000"
+//        'J' -> "Jx0\nxx0\n000"
         '|' -> "0x0\n0x0\n0x0"
         '-' -> "000\nxxx\n000"
         'F' -> "000\n0xx\n0x0"
