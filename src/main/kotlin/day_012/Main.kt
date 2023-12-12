@@ -13,6 +13,11 @@ fun main() {
 //    solutionV1(lines)
     val linesV2 = lines.map { v2Lines(it) }
     solutionV1(linesV2)
+//    solutionBetter(lines)
+}
+
+fun solutionBetter(lines: List<String>) {
+
 }
 
 fun v2Lines(it: String): String {
@@ -60,7 +65,7 @@ fun calculateV2(
     if (gears > maxGears) {
         return 0
     }
-    if (schemaTemplate.isEmpty()) {
+    if (schemaTemplate.isEmpty() || gears == maxGears) {
         return if (validFinish(damagedTemplate, unchangedSchema)) {
             1
         } else {
@@ -95,26 +100,19 @@ fun calculateV2(
             )
         } else {
             if (damagedTemplate[potentialPlacement] == '?') {
-                val builder = StringBuilder(damagedTemplate)
-                builder.setCharAt(potentialPlacement, '.')
-                damagedTemplate = builder.toString()
+                damagedTemplate = damagedTemplate.replaceRange(potentialPlacement, potentialPlacement + 1, ".")
             }
         }
     }
 
     return sum
-
-//bierzesz pierwszą liczbę ze stosu, próbujesz położyć tyle elementów od pierwszego znaku zapytania/# (ale nie może dotykać wcześniejszego geara)
-//    (potem będziesz rozpatrywał położenie od 2 znaku zapytania)
-//    ten placement nie może być na kropkach (? i # są ok) i nie może mieć po sobie # (bo nie zgodzi się element)
-//    potem od najbliższego #/? próbujemy położyć
 }
 
 fun canReplace(template: String, index: Int, numberOfGears: Int): Boolean {
-    if (template.getOrNull(index - 1) == '#') {
+    if (template.length < index + numberOfGears) {
         return false
     }
-    if (template.length < index + numberOfGears) {
+    if (template.getOrNull(index - 1) == '#') {
         return false
     }
     val substring = template.substring(index, index + numberOfGears)
@@ -132,6 +130,30 @@ private fun <E> Stack<E>.copy(): Stack<E> {
 }
 
 fun validFinish(damagedTemplate: String, schema: List<Int>): Boolean {
+    var stringIndex = 0
+    for (int in schema) {
+        var schemaGears = int
+        var gearsStarted = false
+        while (schemaGears > 0) {
+            val char = damagedTemplate[stringIndex]
+            if (schemaGears == int && char == '#' && damagedTemplate.getOrElse(stringIndex - 1) { '.' } == '#') {
+                return false
+            }
+            if (char == '#') {
+                gearsStarted = true
+                schemaGears--
+            } else {
+                if (gearsStarted) {
+                    return false
+                }
+            }
+            stringIndex++
+        }
+    }
+    return true
+}
+
+fun slowValidFinish(damagedTemplate: String, schema: List<Int>): Boolean {
     val gearConsecutive = damagedTemplate.replace('?', '.')
         .split(".")
         .map { it.length }
