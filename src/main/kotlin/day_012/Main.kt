@@ -67,12 +67,12 @@ fun calculatePaper(line: String): Int {
 
 //    sol[0][0] = -1
     val solve = solve(n, k, sol, d, solvedLine)
-//    println(
-//        solvedLine.joinToString(separator = "")
-//            .replace("-1", "?")
-//            .replace("0", ".")
-//            .replace("1", "#")
-//    )
+    println(
+        solvedLine.joinToString(separator = "")
+            .replace("-1", "?")
+            .replace("0", ".")
+            .replace("1", "#")
+    )
     return solve
 }
 
@@ -88,44 +88,67 @@ fun solve(i: Int, j: Int, sol: Array<IntArray>, d: IntArray, solvedLine: IntArra
     if (sol[i][j] != -1) {
         val value = sol[i][j]
         return value
-    }
-    sol[i][j] = 0
-    if (solve(i - 1, j, sol, d, solvedLine) > 0 && solvedLine[i] != BLACK) {
-        updateCellColour(i, WHITE, solvedLine) //i index of cell
-        val value = sol[i][j]
-        val solved = solve(i - 1, j, sol, d, solvedLine)
-        sol[i][j] = value + solved
-    }
-    if (solve(i - d[j] - atLeastOneWhiteCell(j), j - 1, sol, d, solvedLine) > 0 && canPlaceBlock(i, j, d, solvedLine)) {
-        updateBlockColour(i, j, BLACK, d, solvedLine)
-        sol[i][j] = sol[i][j] + solve(i - d[j] - atLeastOneWhiteCell(j), j - 1, sol, d, solvedLine)
+    } else {
+        sol[i][j] = 0
+        if (solve(i - 1, j, sol, d, solvedLine) > 0 && solvedLine[i] != BLACK) {
+            updateCellColour(i, WHITE, solvedLine.copyOf()) //i index of cell
+            val value = sol[i][j]
+            val solved = solve(i - 1, j, sol, d, solvedLine.copyOf())
+            sol[i][j] = value + solved
+        }
+        if (solve(i - d[j] - atLeastOneWhiteCell(j), j - 1, sol, d, solvedLine.copyOf()) > 0 && canPlaceBlock(
+                i,
+                j,
+                d,
+                solvedLine
+            )
+        ) {
+            updateBlockColour(i, j, d, solvedLine)
+            val value = sol[i][j]
+            val solved = solve(i - d[j] - atLeastOneWhiteCell(j), j - 1, sol, d, solvedLine.copyOf())
+            sol[i][j] = value + solved
+        }
     }
     return sol[i][j]
 }
 
 fun canPlaceBlock(i: Int, j: Int, d: IntArray, solvedLine: IntArray): Boolean {
     val untilExcluded = i - d[j]
-    for (m in i.rangeUntil(untilExcluded)) {
-        if (solvedLine[m] == WHITE) {
+    var m = i
+    while (m > untilExcluded) {
+        if (solvedLine[m--] == WHITE) {
             return false
         }
     }
     if (atLeastOneWhiteCell(j) == 1 && solvedLine[untilExcluded] == BLACK) {
         return false
     }
+    if (solvedLine.getOrElse(i + 1) { WHITE } == BLACK) {
+        return false
+    }
     return true
 }
 
-fun updateBlockColour(i: Int, j: Int, color: Int, d: IntArray, solvedLine: IntArray) {
-    val numberOfGears = d[j]
-    val untilExcluded = i - numberOfGears
-    for (m in i.rangeUntil(untilExcluded)) {
-        solvedLine[m] = color
+fun updateBlockColour(i: Int, j: Int, d: IntArray, solvedLine: IntArray) {
+    val untilExcluded = i - d[j]
+    var m = i
+    while (m != untilExcluded) {
+        updateCellColour(m--, BLACK, solvedLine)
     }
     if (atLeastOneWhiteCell(j) == 1) {
-//        solvedLine[i - 1] = WHITE
-//        solvedLine[i - 1 - numberOfGears] = WHITE
-        solvedLine[untilExcluded] = WHITE
+        updateCellColour(i - 1, WHITE, solvedLine)
+    }
+    if (atLeastOneWhiteCellAtTheEnd(j, d) == 1) {
+        updateCellColour(i + 1, WHITE, solvedLine)
+    }
+    println(solvedLine.joinToString(separator = ","))
+}
+
+fun atLeastOneWhiteCellAtTheEnd(j: Int, d: IntArray): Any {
+    if (j == d.size - 1) {
+        return 0
+    } else {
+        return 1
     }
 }
 
@@ -151,9 +174,9 @@ private fun calculateDescriptions(splitted: List<String>) =
 
 private fun calculateSolvedLine(splitted: List<String>) = splitted[0].split("").mapNotNull {
     when (it) {
-        "?" -> -1
-        "#" -> BLACK
-        "." -> WHITE
+        "?" -> -1 //-1
+        "#" -> BLACK //1
+        "." -> WHITE //0
         else -> null
     }
 }.toMutableList()
@@ -177,7 +200,6 @@ fun possibilitiesV1(line: String): Int {
     schema.reversed().forEach { stack.push(it) }
 
     return calculateV2(damagedTemplate, stack, schema, 0, maxGears, 0)
-
 }
 
 private const val GEAR = '#'
@@ -295,6 +317,7 @@ fun slowValidFinish(damagedTemplate: String, schema: List<Int>): Boolean {
     return schema.zip(gearConsecutive).all { pair -> pair.first == pair.second }
 }
 
+/*
 //fun calculate(damagedTemplate: String, schema: List<Int>, maxGears: Int, accumulator: Int): Int {
 //    val gears = damagedTemplate.count { it == GEAR }
 //    val modifablePlaces = damagedTemplate.count { it == '?' }
@@ -362,3 +385,4 @@ fun slowValidFinish(damagedTemplate: String, schema: List<Int>): Boolean {
 //    }
 //    return true
 //}
+**/
