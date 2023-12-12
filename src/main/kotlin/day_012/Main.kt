@@ -41,7 +41,7 @@ fun possibilitiesV1(line: String): Int {
     val stack = Stack<Int>()
     schema.reversed().forEach { stack.push(it) }
 
-    return calculateV2(damagedTemplate, stack, schema, 0, mutableSetOf(), maxGears, 0)
+    return calculateV2(damagedTemplate, stack, schema, 0, maxGears, 0)
 
 }
 
@@ -52,7 +52,6 @@ fun calculateV2(
     schemaTemplate: Stack<Int>,
     unchangedSchema: List<Int>,
     accumulator: Int,
-    checkedStrings: MutableSet<String>,
     maxGears: Int,
     startIndex: Int
 ): Int {
@@ -62,9 +61,7 @@ fun calculateV2(
         return 0
     }
     if (schemaTemplate.isEmpty()) {
-        return if (!checkedStrings.contains(damagedTemplate) && validFinish(damagedTemplate, unchangedSchema)) {
-            checkedStrings.add(damagedTemplate)
-//            println(damagedTemplate)
+        return if (validFinish(damagedTemplate, unchangedSchema)) {
             1
         } else {
             0
@@ -93,7 +90,6 @@ fun calculateV2(
                 schema,
                 unchangedSchema,
                 accumulator,
-                checkedStrings,
                 maxGears,
                 index + numberOfGears
             )
