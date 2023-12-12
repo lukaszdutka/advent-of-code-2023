@@ -10,11 +10,11 @@ private const val inputPath =
 fun main() {
     val lines = File(inputPath).readLines()
 
-//    myCheck("???.### 1,1,3", 1, "first case failed")
+    myCheck("???.### 1,1,3", 1, "first case failed")
     myCheck(".??..??...?##. 1,1,3", 4, "second case failed")
-//    myCheck("?#?#?#?#?#?#?#? 1,3,1,6", 1, "third case failed")
-//    myCheck("????.######..#####. 1,6,5", 4, "fourth case failed")
-//    myCheck("?###???????? 3,2,1", 10, "fifth case failed")
+    myCheck("?#?#?#?#?#?#?#? 1,3,1,6", 1, "third case failed")
+    myCheck("????.######..#####. 1,6,5", 4, "fourth case failed")
+    myCheck("?###???????? 3,2,1", 10, "fifth case failed")
 //    solutionV1(lines)
     val linesV2 = lines.map { v2Lines(it) }
 //    solutionV1(linesV2)
@@ -78,20 +78,6 @@ fun calculatePaper(line: String): Int {
 
 private fun atLeastOneWhiteCell(j: Int): Int = if (j == 1) 0 else 1
 
-private fun calculateDescriptions(splitted: List<String>) =
-    splitted[1].split(",").map { it.toInt() }.toIntArray()
-
-private fun calculateSolvedLine(splitted: List<String>) = splitted[0].split("").mapNotNull {
-    when (it) {
-        "?" -> -1
-        "#" -> BLACK
-        "." -> WHITE
-        else -> null
-    }
-}.toMutableList()
-    .toIntArray()
-
-
 fun solve(i: Int, j: Int, sol: Array<IntArray>, d: IntArray, solvedLine: IntArray): Int {
     if (i < 0 || j < 0) {
         return 0
@@ -137,10 +123,11 @@ fun updateBlockColour(i: Int, j: Int, color: Int, d: IntArray, solvedLine: IntAr
         solvedLine[m] = color
     }
     if (atLeastOneWhiteCell(j) == 1) {
-        solvedLine[i - 1] = WHITE
+//        solvedLine[i - 1] = WHITE
+//        solvedLine[i - 1 - numberOfGears] = WHITE
+        solvedLine[untilExcluded] = WHITE
     }
 }
-
 
 fun updateCellColour(i: Int, color: Int, solvedLine: IntArray) {
     if (solvedLine[i] == -1) {
@@ -158,6 +145,19 @@ fun v2Lines(it: String): String {
             " " +
             listOf(numbers, numbers, numbers, numbers, numbers).reduce { a, b -> "$a,$b" }
 }
+
+private fun calculateDescriptions(splitted: List<String>) =
+    splitted[1].split(",").map { it.toInt() }.toIntArray()
+
+private fun calculateSolvedLine(splitted: List<String>) = splitted[0].split("").mapNotNull {
+    when (it) {
+        "?" -> -1
+        "#" -> BLACK
+        "." -> WHITE
+        else -> null
+    }
+}.toMutableList()
+    .toIntArray()
 
 fun solutionV1(lines: List<String>) {
     println(lines.sumOf { possibilitiesV1(it) })
