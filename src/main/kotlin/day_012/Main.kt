@@ -10,14 +10,122 @@ private const val inputPath =
 fun main() {
     val lines = File(inputPath).readLines()
 
+    myCheck(calculatePaper("???.### 1,1,3"), 1, "first case failed")
+    myCheck(calculatePaper(".??..??...?##. 1,1,3"), 4, "second case failed")
+    myCheck(calculatePaper("?#?#?#?#?#?#?#? 1,3,1,6"), 1, "third case failed")
+    myCheck(calculatePaper("????.######..#####. 1,6,5"), 4, "fourth case failed")
+    myCheck(calculatePaper("?###???????? 3,2,1"), 10, "fifth case failed")
 //    solutionV1(lines)
     val linesV2 = lines.map { v2Lines(it) }
-    solutionV1(linesV2)
+//    solutionV1(linesV2)
 //    solutionBetter(lines)
+//    solutionBetter(linesV2)
 }
 
-fun solutionBetter(lines: List<String>) {
+fun myCheck(calculated: Int, expected: Int, message: String) {
+    if (calculated != expected) {
+        println("$message => expected=$expected, but got calculated=$calculated")
+    }
+}
 
+//according to thing
+private const val WHITE = 0
+private const val BLACK = 1
+private const val UNKNOWN = 2
+
+fun calculatePaper(line: String): Int {
+    val splitted = line.split(" ")
+
+//    val dTemp = calculateDescriptions(splitted)
+//    val d = IntArray(dTemp.size + 1)
+//    d[0] = 0
+//    dTemp.copyInto(d, 1)
+    val d = calculateDescriptions(splitted)
+    val solvedLine = calculateSolvedLine(splitted) //partial colouring, if not everythink known
+    // n - length of line
+    // k - number of blocks of black cells (d.size)
+    val n = solvedLine.size
+    val k = d.size
+
+    // TODO: init properly
+    //is sol == dp?
+    val sol = Array(n + 1) { IntArray(k + 1) { -1 } }
+
+    // d[j] -> j'ty element d/description
+    // 1>1(j) "returns 1 if to the left of block j there must be at least one white cell"
+    // (?) - usually 1, or not if it's start of array
+
+    sol[0][0] = 1
+    val solve = solve(n, k, sol, d, solvedLine)
+    println(solvedLine.joinToString(separator = ""))
+    return solve
+}
+
+private fun atLeastOneWhiteCell(j: Int): Int = if (j == 0) 0 else 1
+
+private fun calculateDescriptions(splitted: List<String>) =
+    splitted[1].split(",").map { it.toInt() }.toIntArray()
+
+private fun calculateSolvedLine(splitted: List<String>) = splitted[0].split("").mapNotNull {
+    when (it) {
+        "?" -> -1
+        "#" -> BLACK
+        "." -> WHITE
+        else -> null
+    }
+}.toMutableList()
+    .toIntArray()
+
+
+fun solve(i: Int, j: Int, sol: Array<IntArray>, d: IntArray, solvedLine: IntArray): Int {
+    if (i < 0 || j < 0) {
+        return 0
+    } else if (i == 0 && j == 0) {
+        return 1
+    }
+    if (sol[i][j] != -1) {
+        return sol[i][j]
+    }
+    sol[i][j] = 0
+    if (solve(i - 1, j, sol, d, solvedLine) > 0 && solvedLine[i] != BLACK) {
+        updateCellColour(i, WHITE, solvedLine) //i index of cell
+        sol[i][j] = sol[i][j] + solve(i - 1, j, sol, d, solvedLine)
+    }
+    if (solve(i - d[j] - atLeastOneWhiteCell(j), j - 1, sol, d, solvedLine) > 0 && canPlaceBlock(i, j, d, solvedLine)) {
+        updateBlockColour(i, j, BLACK, d, solvedLine)
+        sol[i][j] = sol[i][j] + solve(i - d[j] - atLeastOneWhiteCell(j), j - 1, sol, d, solvedLine)
+    }
+    return sol[i][j]
+}
+
+fun canPlaceBlock(i: Int, j: Int, d: IntArray, solvedLine: IntArray): Boolean {
+    for (m in i.rangeUntil(i - d[j])) {
+        if (solvedLine[m] == WHITE) {
+            return false
+        }
+    }
+    if (atLeastOneWhiteCell(j) == 1 && solvedLine[i - d[j]] == BLACK) {
+        return false
+    }
+    return true
+}
+
+fun updateBlockColour(i: Int, j: Int, color: Int, d: IntArray, solvedLine: IntArray) {
+    for (m in i..<(i + d[j])) {
+        solvedLine[m] = color
+    }
+    if (atLeastOneWhiteCell(j) == 1) {
+        solvedLine[i - 1] = WHITE
+    }
+}
+
+
+fun updateCellColour(i: Int, color: Int, solvedLine: IntArray) {
+    if (solvedLine[i] == -1) {
+        solvedLine[i] = color
+    } else if (solvedLine[i] != color) {
+        solvedLine[i] = UNKNOWN // conflict, both colors possible
+    } // no update
 }
 
 fun v2Lines(it: String): String {
