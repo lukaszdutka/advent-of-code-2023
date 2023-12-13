@@ -46,16 +46,17 @@ fun calculateSingle(id: Int, pattern: List<String>): Long {
 
     val possibleMirrorsColumns = mutableListOf<Int>()
     for (mirrorPlacement in 1.rangeUntil(array[0].size)) {
-        if (array.all { line -> isMirrorPossibleColumn(line, mirrorPlacement) }) {
+        val list = array.map { line -> isMirrorPossibleColumn(line, mirrorPlacement) }
+        if (list.all { it.first } && list.count { it.second } == 1) {
             possibleMirrorsColumns.add(mirrorPlacement)
         }
     }
 
     val possibleMirrorsRows = mutableListOf<Int>()
     for (flatMirrorPlacement in 1.rangeUntil(array.size)) {
-        if (0.rangeUntil(array[0].size)
-                .all { columnIndex -> isMirrorPossibleRow(array, columnIndex, flatMirrorPlacement) }
-        ) {
+        val list = 0.rangeUntil(array[0].size)
+            .map { columnIndex -> isMirrorPossibleRow(array, columnIndex, flatMirrorPlacement) }
+        if (list.all { it.first } && list.count { it.second } == 1) {
             possibleMirrorsRows.add(flatMirrorPlacement)
         }
     }
@@ -74,7 +75,11 @@ fun calculateSingle(id: Int, pattern: List<String>): Long {
 //bad: 23383
 // 27505?
 
-fun isMirrorPossibleRow(array: MutableList<List<String>>, columnIndex: Int, mirrorPlacement: Int): Boolean {
+fun isMirrorPossibleRow(
+    array: MutableList<List<String>>,
+    columnIndex: Int,
+    mirrorPlacement: Int
+): Pair<Boolean, Boolean> {
 //    od 1 do ostatni valid index
     // jeśli mirrorPlacement = 1, to
     var shift = 1
@@ -82,9 +87,14 @@ fun isMirrorPossibleRow(array: MutableList<List<String>>, columnIndex: Int, mirr
     var downIndex = mirrorPlacement - 1 + shift
     var up = array.getOrNull(upIndex)?.get(columnIndex)
     var down = array.getOrNull(downIndex)?.get(columnIndex)
+    var smudgeFound = false;
     while (down != null && up != null) {
         if (down != up) {
-            return false
+            if (smudgeFound) {
+                return Pair(false, true)
+            } else {
+                smudgeFound = true
+            }
         }
         shift++
         upIndex = mirrorPlacement - shift
@@ -92,10 +102,10 @@ fun isMirrorPossibleRow(array: MutableList<List<String>>, columnIndex: Int, mirr
         up = array.getOrNull(upIndex)?.get(columnIndex)
         down = array.getOrNull(downIndex)?.get(columnIndex)
     }
-    return true
+    return Pair(true, smudgeFound)
 }
 
-fun isMirrorPossibleColumn(line: List<String>, mirrorPlacement: Int): Boolean {
+fun isMirrorPossibleColumn(line: List<String>, mirrorPlacement: Int): Pair<Boolean, Boolean> {
     //if mirror placement = 1, oznacza to, że jest po prawej od kolumny 0
     // czyli pierwsze elementy to 0 i 1
     //if mirror placement = array.size-1 (ostatni index) czyli jest po prawej od kolumny przedostatniindex
@@ -105,9 +115,14 @@ fun isMirrorPossibleColumn(line: List<String>, mirrorPlacement: Int): Boolean {
     var rightIndex = mirrorPlacement - 1 + shift
     var left = line.getOrNull(leftIndex)
     var right = line.getOrNull(rightIndex)
+    var smudgeFound = false
     while (right != null && left != null) {
         if (right != left) {
-            return false
+            if (smudgeFound) {
+                return Pair(false, true)
+            } else {
+                smudgeFound = true
+            }
         }
         shift++
         leftIndex = mirrorPlacement - shift
@@ -115,5 +130,5 @@ fun isMirrorPossibleColumn(line: List<String>, mirrorPlacement: Int): Boolean {
         left = line.getOrNull(leftIndex)
         right = line.getOrNull(rightIndex)
     }
-    return true
+    return Pair(true, smudgeFound)
 }
