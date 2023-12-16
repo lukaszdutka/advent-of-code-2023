@@ -24,11 +24,13 @@ fun main() {
 fun solveV2(inputs2: MutableList<MutableList<String>>): Int {
     var max = 0
     for (i in 0..<110) {
-        val right = solveV1(inputs2, i to 0, "right")
-        val down = solveV1(inputs2, 0 to i, "down")
-        val up = solveV1(inputs2, 109 to i, "up")
-        val left = solveV1(inputs2, i to 109, "left")
-        max = listOf(max, right, left, up, down).max()
+        max = listOf(
+            max,
+            solveV1(inputs2, i to 0, "right"),
+            solveV1(inputs2, 0 to i, "down"),
+            solveV1(inputs2, 109 to i, "up"),
+            solveV1(inputs2, i to 109, "left")
+        ).max()
     }
     return max
 }
