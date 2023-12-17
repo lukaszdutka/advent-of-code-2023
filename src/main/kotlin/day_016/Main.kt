@@ -36,21 +36,15 @@ fun solveV2(inputs2: MutableList<MutableList<String>>): Int {
 }
 
 fun solveV1(grid: MutableList<MutableList<String>>, startingNode: Pair<Int, Int>, startingDirection: String): Int {
-    // / \
-    // | -
-    // .
-    val checkedTypes = mutableSetOf<Triple<Int, Int, String>>()
-    val energizedFields = mutableSetOf<Pair<Int, Int>>()
+    val checkedMoves = mutableSetOf<Triple<Int, Int, String>>()
 
     fun drawBeam(coords: Pair<Int, Int>, direction: String) {
-        val y = coords.first
-        val x = coords.second
+        val (y, x) = coords
         val cell = grid.getOrNull(y)?.getOrNull(x) ?: return
-        if (checkedTypes.contains(Triple(y, x, direction))) {
+        if (Triple(y, x, direction) in checkedMoves) {
             return
         }
-        checkedTypes.add(Triple(y, x, direction))
-        energizedFields.add(coords)
+        checkedMoves.add(Triple(y, x, direction))
 
         if (cell == ".") {
             drawBeam(coords.change(direction), direction)
@@ -89,9 +83,9 @@ fun solveV1(grid: MutableList<MutableList<String>>, startingNode: Pair<Int, Int>
             }
         }
     }
+
     drawBeam(startingNode, startingDirection)
-//    grid.print(energizedFields)
-    return energizedFields.size
+    return checkedMoves.map { t -> Pair(t.first, t.second) }.toSet().size
 }
 
 private fun MutableList<MutableList<String>>.print(energizedFields: MutableSet<Pair<Int, Int>>) {
