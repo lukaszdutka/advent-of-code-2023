@@ -20,7 +20,8 @@ fun main() {
         inputs2.add(line.split("").filter { it.isNotBlank() }.map { it.toInt() }.toMutableList())
     }
 
-    println(solutionV1(inputs))
+    println("v1=${solutionV1(inputs)}")
+    println("v2=${solutionV2(inputs)}")
 }
 
 data class Node(val coords: Pair<Int, Int>, val direction: String?, val repeats: Int, val weight: Int)
@@ -65,6 +66,65 @@ fun solutionV1(grid: MutableList<MutableList<Int>>): Int {
     println("wtf")
     return -1
 //    return min(costSoFar[Edge(goal.left(), goal)]!!, costSoFar[Edge(goal.up(), goal)]!!)
+}
+
+//1663 - too high
+//1416 - DONE
+fun solutionV2(grid: MutableList<MutableList<Int>>): Int {
+    val startingNode = Node(0 to 0, null, 0, 0)
+    val goal = grid.size - 1 to grid[0].size - 1
+
+    val frontier: PriorityQueue<Node> = PriorityQueue(compareBy { it.weight })
+    val visited = mutableSetOf<NodeNoWeight>() // coords and repeats
+
+    fun value(coords: Pair<Int, Int>): Int? = grid.getOrNull(coords.first)?.getOrNull(coords.second)
+
+    frontier.add(startingNode)
+
+    while (frontier.isNotEmpty()) {
+        val (coords, direction, repeats, weight) = frontier.poll()!!
+        if (NodeNoWeight(coords, direction, repeats) in visited) {
+            continue
+        }
+        visited.add(NodeNoWeight(coords, direction, repeats))
+        if (coords == goal) {
+            return weight
+        }
+        if (repeats < 4 && direction != null) {
+            val next = coords.next(direction)
+            if (value(next) != null) {
+                frontier.add(Node(next, direction, repeats + 1, weight + value(next)!!))
+            }
+        } else if (repeats == 0 && direction == null) {
+            val next = coords.next("down")
+            if (value(next) != null) {
+                frontier.add(Node(next, "down", 1, weight + value(next)!!))
+            }
+            val next2 = coords.next("right")
+            if (value(next2) != null) {
+                frontier.add(Node(next2, "right", 1, weight + value(next2)!!))
+            }
+        } else {
+            if (repeats in 4..9 && direction != null) {
+                val next = coords.next(direction)
+                if (value(next) != null) {
+                    frontier.add(Node(next, direction, repeats + 1, weight + value(next)!!))
+                }
+            }
+            for (newDirection in listOf("left", "right", "up", "down")) {
+                if (newDirection == direction || areOpposite(direction, newDirection)) {
+                    continue
+                }
+                val next = coords.next(newDirection)
+                if (value(next) != null) {
+                    frontier.add(Node(next, newDirection, 1, weight + value(next)!!))
+                }
+            }
+        }
+
+    }
+    println("wtf")
+    return -1
 }
 
 fun areOpposite(direction: String?, newDirection: String): Boolean {
