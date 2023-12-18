@@ -1,6 +1,7 @@
 package day_018
 
 import java.io.File
+import java.math.BigDecimal
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -8,8 +9,12 @@ import kotlin.math.min
 private const val inputPath =
     "/Users/lukaszdutka/IdeaProjects/fun/advent-of-code-2023/src/main/kotlin/day_018/input.txt"
 //    "/Users/lukaszdutka/IdeaProjects/fun/advent-of-code-2023/src/main/kotlin/day_018/input_small.txt"
-
+//48503
+//
 //28538 - not right
+
+//952408144115
+//952404941483
 fun main() {
     val lines = File(inputPath).readLines()
 
@@ -18,80 +23,65 @@ fun main() {
 }
 
 fun solutionV1(lines: List<String>): String {
-    val moves = lines.map { it.split(" ")[0] to it.split(" ")[1].toInt() }
+//    val moves = lines.map { it.split(" ")[0] to it.split(" ")[1].toInt() }
+    val moves = lines.map { parseInputLine(it) }
     var coords = 0 to 0
-    val oldDiggedOut = mutableSetOf<Pair<Int, Int>>()
+    val nodes = mutableListOf<Pair<Int, Int>>()
 
+    nodes.add(coords)
     for ((direction, steps) in moves) {
-        var stepsLeft = steps
-        while (stepsLeft > 0) {
-            stepsLeft--
-            coords = coords.next(direction)
-            oldDiggedOut.add(coords)
-        }
+        coords = coords.next(direction, steps)
+        nodes.add(coords)
     }
-    val smallestY = oldDiggedOut.minOfOrNull { it.first }!!
-    val smallestX = oldDiggedOut.minOfOrNull { it.second }!!
-    var shiftY = 0
-    var shiftX = 0
-    if (smallestY < 0) {
-        shiftY = abs(smallestY)
+//    println(nodes.size)
+//    val sides = nodes.zipWithNext().sumOf { (a, b) -> abs(a.first - b.first) + abs(a.second - b.second) - 1 }
+//    println(sides)
+    val polygonArea = polygonArea(nodes, nodes.size)
+
+//    println(952408144115 - 952404941483)
+    val additionalArea =
+        nodes.zipWithNext().sumOf { (a, b) -> abs(a.first - b.first) + abs(a.second - b.second) } / 2 + 1
+    println(additionalArea)
+    return "${polygonArea + additionalArea.toBigDecimal()}"
+}
+
+fun parseInputLine(it: String): Pair<String, Int> {
+    val string = it.split(" ")[2]
+        .replace("(#", "")
+        .replace(")", "")
+
+    val directionNumber = string.substring(string.length - 1).toInt()
+    val steps = string.substring(0, string.length - 1)
+
+    val stepsDecimal = Integer.parseInt(steps, 16)
+    if (directionNumber == 0) {
+        return "R" to stepsDecimal
     }
-    if (smallestX < 0) {
-        shiftX = abs(smallestX)
+    if (directionNumber == 1) {
+        return "D" to stepsDecimal
     }
-
-    val diggedOut = oldDiggedOut.map { it.first + shiftY to it.second + shiftX }
-
-    val gridY = diggedOut.maxOfOrNull { it.first }!!
-    val gridX = diggedOut.maxOfOrNull { it.second }!!
-
-    val map = mutableListOf<MutableList<String>>()
-    for (y in 0..gridY) {
-        val row = mutableListOf<String>()
-        for (x in 0..gridX) {
-            if (diggedOut.contains(y to x)) {
-                row.add("#")
-            } else {
-                row.add(".")
-            }
-        }
-        map.add(row)
+    if (directionNumber == 2) {
+        return "L" to stepsDecimal
     }
-
-    map.prettyPrint()
-
-    println(isPointInPolygon(6 to 5, diggedOut))
-    val border = diggedOut.toList()
-
-    for (y in 0..gridY) {
-        for (x in 0..gridX) {
-            if (isPointInPolygon(y to x, border)) {
-                map[y][x] = "#"
-            }
-        }
+    if (directionNumber == 3) {
+        return "U" to stepsDecimal
     }
-    println("new:")
-    map.prettyPrint()
-
-    val result = map.sumOf { it -> it.count { it == "#" } }
-
-    return "$result"
+    throw RuntimeException("Something bad.")
 }
 
 
-private fun Pair<Int, Int>.next(direction: String): Pair<Int, Int> = when (direction) {
-    "R" -> this.right()
-    "L" -> this.left()
-    "U" -> this.up()
-    "D" -> this.down()
+private fun Pair<Int, Int>.next(direction: String, steps: Int = 1): Pair<Int, Int> = when (direction) {
+    "R" -> this.right(steps)
+    "L" -> this.left(steps)
+    "U" -> this.up(steps)
+    "D" -> this.down(steps)
     else -> throw RuntimeException("bad one direction")
 }
 
-private fun Pair<Int, Int>.up() = this.first - 1 to this.second
-private fun Pair<Int, Int>.down() = this.first + 1 to this.second
-private fun Pair<Int, Int>.right() = this.first to this.second + 1
-private fun Pair<Int, Int>.left() = this.first to this.second - 1
+private fun Pair<Int, Int>.up(steps: Int = 1) = this.first - steps to this.second
+private fun Pair<Int, Int>.down(steps: Int = 1) = this.first + steps to this.second
+private fun Pair<Int, Int>.right(steps: Int = 1) = this.first to this.second + steps
+private fun Pair<Int, Int>.left(steps: Int = 1) = this.first to this.second - steps
 
 
 private fun <T> List<List<T>>.prettyPrint() {
@@ -129,4 +119,24 @@ fun isPointInPolygon(p: Pair<Int, Int>, polygon: List<Pair<Int, Int>>): Boolean 
         j = i++
     }
     return inside
+}
+
+// (X[i], Y[i]) are coordinates of i'th point.
+fun polygonArea(nodes: List<Pair<Int, Int>>, n: Int): BigDecimal {
+    // Initialize area
+    var area: BigDecimal = BigDecimal.ZERO
+
+    // Calculate value of shoelace formula
+    var j = n - 1
+    for (i in 0..<n) {
+        area +=
+            (nodes[j].second.toBigDecimal() + nodes[i].second.toBigDecimal()) *
+                    (nodes[j].first.toBigDecimal() - nodes[i].first.toBigDecimal())
+
+        // j is previous vertex to i
+        j = i
+    }
+
+    // Return absolute value
+    return (area / 2.toBigDecimal()).abs()
 }
