@@ -14,17 +14,7 @@ fun main() {
     println("v2=${solutionV1(lines)}")
 }
 
-data class Part(val categories: Map<String, IntRange>) { // category to value
-//data class Part(val x: IntRange, val m: IntRange, val a: IntRange, val s: IntRange) {
-
-//    fun get(category: String): IntRange = when (category) {
-//        "x" -> x
-//        "m" -> m
-//        "a" -> a
-//        "s" -> s
-//        else -> throw RuntimeException("bad categroy");
-//    }
-
+data class Part(val categories: Map<String, IntRange>) {
     fun satisfies(condition: Condition): Pair<Part?, Part?> {
         if (condition is SendingCondition) {
             return this to null
