@@ -88,18 +88,11 @@ fun solutionV1(lines: List<String>): BigInteger {
     val rules = parseInput(lines)
     val acceptedParts = mutableSetOf<Part>()
 
-    val visited = mutableSetOf<Triple<Part, String, Int>>()
-
     fun calculatePart(
         part: Part,
         ruleId: String = "in",
         conditionIndex: Int = 0
     ) {
-        if (Triple(part, ruleId, conditionIndex) in visited) {
-            return
-        }
-        visited.add(Triple(part, ruleId, conditionIndex))
-
         val condition = rules[ruleId]!!.conditions[conditionIndex]
         val (satisfying, notSatisfying) = part.satisfies(condition)
         if (satisfying != null) {
@@ -126,9 +119,6 @@ fun solutionV1(lines: List<String>): BigInteger {
     )
     calculatePart(wholePart, "in", 0)
 
-
-//think about that later
-//    return acceptedParts.sumOf { it.categories.values.sum() }
     return calculateSolution(acceptedParts)
 }
 
@@ -136,7 +126,7 @@ fun calculateSolution(acceptedParts: MutableSet<Part>): BigInteger {
     var sum = BigInteger.ZERO
     for (part in acceptedParts) {
         val number = part.categories.values
-            .map { BigInteger.valueOf(it.last.toLong() - it.first.toLong()) + BigInteger.ONE }
+            .map { BigInteger.valueOf(it.last.toLong() - it.first.toLong()) + 1.toBigInteger() }
             .reduce { a, b -> a * b }
         sum += number
     }
