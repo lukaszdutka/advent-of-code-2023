@@ -60,44 +60,32 @@ data class Part(val categories: Map<String, IntRange>) { // category to value
     }
 
     private fun returnNewMaps(
-        category: String,
-        satisfiedRange: IntRange,
-        notSatisfiedRange: IntRange
+        category: String, satisfiedRange: IntRange, notSatisfiedRange: IntRange
     ): Pair<Part, Part> {
         val satisfiedMap = this.categories.toMutableMap().apply { put(category, satisfiedRange) }
-        val notSatisfiedMap =
-            this.categories.toMutableMap().apply { put(category, notSatisfiedRange) }
+        val notSatisfiedMap = this.categories.toMutableMap().apply { put(category, notSatisfiedRange) }
 
         return Part(satisfiedMap) to Part(notSatisfiedMap)
     }
 }
 
-abstract class Condition(val type: String, val sendTo: String)
+abstract class Condition(val sendTo: String)
 class DecidingCondition(
-    type: String,
-    val category: String,
-    val greaterThan: Boolean,
-    val value: Int,
-    sendTo: String
-) : Condition(type, sendTo)
+    val category: String, val greaterThan: Boolean, val value: Int, sendTo: String
+) : Condition(sendTo)
 
-class SendingCondition(type: String, sendTo: String) : Condition(type, sendTo)
+class SendingCondition(sendTo: String) : Condition(sendTo)
 data class Rule(val id: String, val conditions: List<Condition>)
 
 fun solutionV1(lines: List<String>): BigInteger {
     val rules = parseInput(lines)
     val acceptedParts = mutableSetOf<Part>()
 
-    fun calculatePart(
-        part: Part,
-        ruleId: String = "in",
-        conditionIndex: Int = 0
-    ) {
+    fun calculatePart(part: Part, ruleId: String = "in", conditionIndex: Int = 0) {
         val condition = rules[ruleId]!!.conditions[conditionIndex]
         val (satisfying, notSatisfying) = part.satisfies(condition)
         if (satisfying != null) {
-            val sendTo = condition.sendTo
-            when (sendTo) {
+            when (val sendTo = condition.sendTo) {
                 "R" -> {}
                 "A" -> acceptedParts.add(satisfying)
                 else -> calculatePart(satisfying, sendTo, 0)
@@ -109,14 +97,8 @@ fun solutionV1(lines: List<String>): BigInteger {
     }
 
     val fullRange = 1..4000
-    val wholePart = Part(
-        mapOf(
-            "x" to fullRange,
-            "m" to fullRange,
-            "a" to fullRange,
-            "s" to fullRange
-        )
-    )
+    val wholePart = Part(mapOf("x" to fullRange, "m" to fullRange, "a" to fullRange, "s" to fullRange))
+
     calculatePart(wholePart, "in", 0)
 
     return calculateSolution(acceptedParts)
@@ -126,7 +108,8 @@ fun calculateSolution(acceptedParts: MutableSet<Part>): BigInteger {
     var sum = BigInteger.ZERO
     for (part in acceptedParts) {
         val number = part.categories.values
-            .map { BigInteger.valueOf(it.last.toLong() - it.first.toLong()) + 1.toBigInteger() }
+            .map { it.last - it.first + 1 }
+            .map { it.toBigInteger() }
             .reduce { a, b -> a * b }
         sum += number
     }
@@ -140,50 +123,27 @@ private fun parseInput(lines: List<String>): MutableMap<String, Rule> {
         if (line.isBlank()) {
             break
         }
-        val id = line.split("{")[0]
-        val conditionsStrings = line.split("{")[1].replace("}", "").split(",")
-        val conditions = conditionsStrings.map { it.toCondition() }
-
+        val (id, conditionsStrings) = line.split("{")
+        val conditions = conditionsStrings
+            .replace("}", "")
+            .split(",")
+            .map { it.toCondition() }
         rules[id] = Rule(id, conditions)
     }
     return rules
 }
 
 private fun String.toCondition(): Condition {
-//            mn{s<3661:A,s>3705:A,m<1698:R,A}
     val split = this.split(":")
-    if (split.size == 1) {
-        return SendingCondition("SENDING", split[0])
-    }
+    if (split.size == 1) return SendingCondition(split[0])
     val sendTo = split[1]
     if (split[0].contains(">")) {
-        return DecidingCondition(
-            "GREATER_THAN",
-            split[0].split(">")[0],
-            true,
-            split[0].split(">")[1].toInt(),
-            sendTo
-        )
+        val (key, value) = split[0].split(">")
+        return DecidingCondition(key, true, value.toInt(), sendTo)
     }
     if (split[0].contains("<")) {
-        return DecidingCondition(
-            "LESS_THAN",
-            split[0].split("<")[0],
-            false,
-            split[0].split("<")[1].toInt(),
-            sendTo
-        )
+        val (key, value) = split[0].split("<")
+        return DecidingCondition(key, false, value.toInt(), sendTo)
     }
     throw RuntimeException("bad")
 }
-
-
-
-
-
-
-
-
-
-
-
