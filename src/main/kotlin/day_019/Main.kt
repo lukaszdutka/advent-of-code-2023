@@ -1,6 +1,7 @@
 package day_019
 
 import java.io.File
+import java.math.BigInteger
 import kotlin.RuntimeException
 
 private const val inputPath =
@@ -10,24 +11,64 @@ private const val inputPath =
 fun main() {
     val lines = File(inputPath).readLines()
 
-    println("v1=${solutionV1(lines)}")
-//    println("v2=${solutionV2(inputs)}")
+    println("v2=${solutionV1(lines)}")
 }
 
-data class Part(val categories: Map<String, Int>) // category to value
-{
-    fun satisfies(condition: Condition): Boolean {
+data class Part(val categories: Map<String, IntRange>) { // category to value
+//data class Part(val x: IntRange, val m: IntRange, val a: IntRange, val s: IntRange) {
+
+//    fun get(category: String): IntRange = when (category) {
+//        "x" -> x
+//        "m" -> m
+//        "a" -> a
+//        "s" -> s
+//        else -> throw RuntimeException("bad categroy");
+//    }
+
+    fun satisfies(condition: Condition): Pair<Part?, Part?> {
         if (condition is SendingCondition) {
-            return true
+            return this to null
         }
-        if (condition is DecidingCondition) {
-            if (condition.greaterThan) {
-                return this.categories[condition.category]!! > condition.value
+        if (condition !is DecidingCondition) throw RuntimeException("bad")
+
+        val category = condition.category
+        val categoryRange = this.categories[category]!!
+        if (condition.greaterThan) { // >
+            return if (categoryRange.contains(condition.value)) {
+                val satisfiedRange = condition.value + 1..categoryRange.last
+                val notSatisfiedRange = categoryRange.first..condition.value
+
+                returnNewMaps(category, satisfiedRange, notSatisfiedRange)
+            } else if (categoryRange.first > condition.value) {
+                this to null
             } else {
-                return this.categories[condition.category]!! < condition.value
+                null to this
             }
+        } else {
+            return if (categoryRange.contains(condition.value)) { // <
+                val satisfiedRange = categoryRange.first..<condition.value
+                val notSatisfiedRange = condition.value..categoryRange.last
+
+                returnNewMaps(category, satisfiedRange, notSatisfiedRange)
+            } else if (categoryRange.last < condition.value) {
+                this to null
+            } else {
+                null to this
+            }
+
         }
-        throw RuntimeException("bad");
+    }
+
+    private fun returnNewMaps(
+        category: String,
+        satisfiedRange: IntRange,
+        notSatisfiedRange: IntRange
+    ): Pair<Part, Part> {
+        val satisfiedMap = this.categories.toMutableMap().apply { put(category, satisfiedRange) }
+        val notSatisfiedMap =
+            this.categories.toMutableMap().apply { put(category, notSatisfiedRange) }
+
+        return Part(satisfiedMap) to Part(notSatisfiedMap)
     }
 }
 
@@ -43,68 +84,79 @@ class DecidingCondition(
 class SendingCondition(type: String, sendTo: String) : Condition(type, sendTo)
 data class Rule(val id: String, val conditions: List<Condition>)
 
-fun solutionV1(lines: List<String>): Int {
-    val (parts, rules) = parseInput(lines)
+fun solutionV1(lines: List<String>): BigInteger {
+    val rules = parseInput(lines)
     val acceptedParts = mutableSetOf<Part>()
 
-    for (part in parts) {
-        val processedPart = part(rules, part)
-        if (processedPart != null) {
-            acceptedParts.add(part)
+    val visited = mutableSetOf<Triple<Part, String, Int>>()
+
+    fun calculatePart(
+        part: Part,
+        ruleId: String = "in",
+        conditionIndex: Int = 0
+    ) {
+        if (Triple(part, ruleId, conditionIndex) in visited) {
+            return
         }
-    }
+        visited.add(Triple(part, ruleId, conditionIndex))
 
-    return acceptedParts.sumOf { it.categories.values.sum() }
-}
-
-private fun part(
-    rules: MutableMap<String, Rule>,
-    part: Part
-): Part? {
-    var ruleId = "in"
-    while (true) {
-        val currentConditions = rules[ruleId]!!.conditions
-        for (condition in currentConditions) {
-            if (part.satisfies(condition)) {
-                val sendTo = condition.sendTo
-                if (sendTo == "R") {
-                    return null
-                }
-                if (sendTo == "A") {
-                    return part
-                }
-                ruleId = sendTo
-                break
+        val condition = rules[ruleId]!!.conditions[conditionIndex]
+        val (satisfying, notSatisfying) = part.satisfies(condition)
+        if (satisfying != null) {
+            val sendTo = condition.sendTo
+            when (sendTo) {
+                "R" -> {}
+                "A" -> acceptedParts.add(satisfying)
+                else -> calculatePart(satisfying, sendTo, 0)
             }
         }
+        if (notSatisfying != null) {
+            calculatePart(notSatisfying, ruleId, conditionIndex + 1)
+        }
     }
+
+    val fullRange = 1..4000
+    val wholePart = Part(
+        mapOf(
+            "x" to fullRange,
+            "m" to fullRange,
+            "a" to fullRange,
+            "s" to fullRange
+        )
+    )
+    calculatePart(wholePart, "in", 0)
+
+
+//think about that later
+//    return acceptedParts.sumOf { it.categories.values.sum() }
+    return calculateSolution(acceptedParts)
 }
 
-private fun parseInput(lines: List<String>): Pair<MutableList<Part>, MutableMap<String, Rule>> {
-    val parts = mutableListOf<Part>()
+fun calculateSolution(acceptedParts: MutableSet<Part>): BigInteger {
+    var sum = BigInteger.ZERO
+    for (part in acceptedParts) {
+        val number = part.categories.values
+            .map { BigInteger.valueOf(it.last.toLong() - it.first.toLong()) + BigInteger.ONE }
+            .reduce { a, b -> a * b }
+        sum += number
+    }
+    return sum
+}
+
+
+private fun parseInput(lines: List<String>): MutableMap<String, Rule> {
     val rules = mutableMapOf<String, Rule>()
-    var parseRules = true;
     for (line in lines) {
         if (line.isBlank()) {
-            parseRules = false
-            continue
+            break
         }
-        if (parseRules) {
-            val id = line.split("{")[0]
-            val conditionsStrings = line.split("{")[1].replace("}", "").split(",")
-            val conditions = conditionsStrings.map { it.toCondition() }
+        val id = line.split("{")[0]
+        val conditionsStrings = line.split("{")[1].replace("}", "").split(",")
+        val conditions = conditionsStrings.map { it.toCondition() }
 
-            rules[id] = Rule(id, conditions)
-        } else {
-            val withoutPars = line.replace("{", "").replace("}", "")
-            val parsedPart = Part(withoutPars.split(",")
-                .associate { it.split("=")[0] to it.split("=")[1].toInt() }
-            )
-            parts.add(parsedPart)
-        }
-
+        rules[id] = Rule(id, conditions)
     }
-    return parts to rules
+    return rules
 }
 
 private fun String.toCondition(): Condition {
