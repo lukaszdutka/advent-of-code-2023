@@ -1,7 +1,9 @@
 package day_020
 
+import day_008.lcm
 import java.io.File
 import java.lang.RuntimeException
+import java.math.BigInteger
 import java.util.LinkedList
 import java.util.Queue
 
@@ -19,9 +21,63 @@ fun main() {
 const val FLIP_FLOP = "%"
 const val CONJUNCTION = "&"
 const val BROADCASTER = "broadcaster"
-fun solutionV1(lines: List<String>): Int {
+fun solutionV1(lines: List<String>): BigInteger {
     // %, &, broadcaster
+    val allModules = parseInput(lines)
 
+    printForGraph(allModules)
+
+    val gf: Conjunction = allModules["gf"] as Conjunction
+
+    var buttonPressed = 0.toBigInteger()
+    while (true) { // button push
+        buttonPressed++
+        val impulses: Queue<Impulse> = LinkedList()
+        impulses.add(Impulse("button", BROADCASTER, LOW))
+
+
+
+        while (impulses.isNotEmpty()) {
+            val (source, destination, impulse) = impulses.poll()!!
+            if (source == "gf") {
+                val sources = gf.recentPulses.filter { it.value == HIGH }
+                if (sources.isNotEmpty()) {
+                    println("$buttonPressed => ${sources.keys}")
+                }
+                //kr, zs, kf, qk
+                val kr = (11283 - 7522).toBigInteger()
+                val zs = (12273 - 8182).toBigInteger()
+                val kf = (22602 - 18835).toBigInteger()
+                val qk = (28007 - 24006).toBigInteger()
+
+                println("res = ${lcm(lcm(lcm(kr, zs), kf), qk)}")
+            }
+            if (destination == "rx" && impulse == LOW) {
+                return buttonPressed
+            }
+
+            val module = allModules[destination] ?: continue
+            val whatPulseToSend = module.whatPulseToSend(impulse, source)
+            if (whatPulseToSend != null) {
+                for (destinationModule in module.destinationKeys) {
+                    impulses.add(Impulse(module.key, destinationModule, whatPulseToSend))
+                }
+            }
+        }
+    }
+
+    throw RuntimeException("bad");
+}
+
+private fun printForGraph(allModules: MutableMap<String, Module>) {
+    for (module in allModules) {
+        for (destination in module.value.destinationKeys) {
+            println("\"${module.value.keyWithType()}\" -- \"${allModules[destination]?.keyWithType() ?: "rx"}\"")
+        }
+    }
+}
+
+private fun parseInput(lines: List<String>): MutableMap<String, Module> {
     val allModules = mutableMapOf<String, Module>()
     val conjunctionModules = mutableListOf<Conjunction>()
     for (module in lines.map { it.parse() }) {
@@ -37,45 +93,14 @@ fun solutionV1(lines: List<String>): Int {
             }
         }
     }
-    var lowImpulse = 0
-    var highImpulse = 0
-
-    for (i in 1..1000) { // button push
-        lowImpulse++
-        val impulses: Queue<Impulse> = LinkedList()
-        impulses.add(Impulse("button", BROADCASTER, LOW))
-
-        while (impulses.isNotEmpty()) {
-            val (source, destination, impulse) = impulses.poll()!!
-
-//            if (destination == "rx" && impulse == LOW) {
-//                return i
-//            }
-
-            val module = allModules[destination] ?: continue
-            val whatPulseToSend = module.whatPulseToSend(impulse, source)
-            if (whatPulseToSend != null) {
-                for (destinationModule in module.destinationKeys) {
-                    if (whatPulseToSend == LOW) {
-                        lowImpulse++
-                    } else {
-                        highImpulse++
-                    }
-                    impulses.add(Impulse(module.key, destinationModule, whatPulseToSend))
-                }
-            }
-        }
-    }
-
-    println(lowImpulse)
-    println(highImpulse)
-    return lowImpulse * highImpulse
+    return allModules
 }
 
 data class Impulse(val source: String, val destination: String, val impulse: String)
 
 private abstract class Module(val key: String, val destinationKeys: List<String>) {
     abstract fun whatPulseToSend(impulse: String, source: String): String?
+    abstract fun keyWithType(): String
 }
 
 private const val HIGH = "high"
@@ -93,6 +118,12 @@ private class FlipFlop(key: String, destinationKeys: List<String>, var on: Boole
         on = !on
         return if (on) HIGH else LOW
     }
+
+    override fun keyWithType(): String = FLIP_FLOP + key
+
+    override fun toString(): String {
+        return "FlipFlop(on=$on)"
+    }
 }
 
 private class Conjunction(
@@ -108,12 +139,25 @@ private class Conjunction(
         }
         return HIGH
     }
+
+    override fun keyWithType(): String = CONJUNCTION + key
+
+    override fun toString(): String {
+        return "Conjunction(recentPulses=$recentPulses)"
+    }
+
 }
 
 private class Broadcast(key: String, destinationKeys: List<String>) : Module(key, destinationKeys) {
     override fun whatPulseToSend(impulse: String, source: String): String {
         return impulse
     }
+
+    override fun toString(): String {
+        return "Broadcast()"
+    }
+
+    override fun keyWithType(): String = BROADCASTER + key
 }
 
 
