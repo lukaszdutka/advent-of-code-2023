@@ -177,15 +177,15 @@ fun divideInto3by3(
     println("rightDown:")
     rightDown.prettyPrint(checked, "right", "down")
 
-    val corners = numberOfGardens(leftMid, checked, column = "left", row = "mid") +
-            numberOfGardens(midUp, checked, column = "mid", row = "up") +
-            numberOfGardens(rightMid, checked, column = "right", row = "mid") +
-            numberOfGardens(midDown, checked, column = "mid", row = "down")
+    val corners = numberOfGardens(leftMid, checked, column = "left", row = "mid", even = false) +
+            numberOfGardens(midUp, checked, column = "mid", row = "up", even = false) +
+            numberOfGardens(rightMid, checked, column = "right", row = "mid", even = false) +
+            numberOfGardens(midDown, checked, column = "mid", row = "down", even = false)
     val edges = 202300.toBigInteger() * // there are 202300 edges of each type
-            (numberOfGardens(leftUp, checked, even = false, "left", "up") +
-                    numberOfGardens(rightUp, checked, even = false, "right", "up") +
-                    numberOfGardens(leftDown, checked, even = false, "left", "down") +
-                    numberOfGardens(rightDown, checked, even = false, "right", "down"))
+            (numberOfGardens(leftUp, checked, even = true, "left", "up") +
+                    numberOfGardens(rightUp, checked, even = true, "right", "up") +
+                    numberOfGardens(leftDown, checked, even = true, "left", "down") +
+                    numberOfGardens(rightDown, checked, even = true, "right", "down"))
 
     val fullEven = numberOfGardens(midMid, checked, even = true, "mid", "mid")
     val fullOdd = numberOfGardens(midMid, checked, even = false, "mid", "mid")
@@ -196,10 +196,10 @@ fun divideInto3by3(
     println("END RESULT = $result")
 }
 
-fun calculateOddSquares(): BigInteger {
+fun calculateEvenSquares(): BigInteger {
     val a1 = 3.toBigInteger()
     val r = 4.toBigInteger()
-    val an = (202299 * 2 + 1).toBigInteger() //ile jest nieparzystych w największym słupku?
+    val an = (202299 * 2 + 1).toBigInteger() //ile jest parzystych w największym słupku?
 
     val n = (an - a1) / r + ONE
     val sum = (a1 + an) * n / TWO
@@ -210,10 +210,10 @@ fun calculateOddSquares(): BigInteger {
     return result
 }
 
-fun calculateEvenSquares(): BigInteger {
+fun calculateOddSquares(): BigInteger {
     val a1 = ONE
     val r = 4.toBigInteger()
-    val an = (202298 * 2 + 1).toBigInteger() //ile jest parzystych w największym słupku?
+    val an = (202299 * 2 - 1).toBigInteger() //ile jest nieparzystych w największym słupku?
 
     val n = (an - a1) / r + ONE
     val sum = (a1 + an) * n / TWO
