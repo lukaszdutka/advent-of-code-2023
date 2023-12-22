@@ -8,6 +8,16 @@ private const val inputPath =
     "/Users/lukaszdutka/IdeaProjects/fun/advent-of-code-2023/src/main/kotlin/day_021/input.txt"
 //    "/Users/lukaszdutka/IdeaProjects/fun/advent-of-code-2023/src/main/kotlin/day_021/input_small.txt"
 
+private const val x = 2
+
+private const val boardSize = 131
+
+//private const val boardSize = 11
+private val startingPoint = (boardSize / 2 + 2 * boardSize) to (boardSize / 2 + 2 * boardSize)
+
+private const val maxNumberOfSteps = boardSize / 2 + x * boardSize
+//private const val maxNumberOfSteps = 65
+
 //bad 696
 //592765599408546 too low
 //74443071567297 too low
@@ -18,6 +28,10 @@ private const val inputPath =
 //593168942554806 - bad
 //593168942554280 - bad
 //593168961570610 - bad
+//593174091266625 - bad
+//593174122420825 - GOOD
+//615682809390825 - doesnt work
+//570665361206542 - to small
 fun main() {
 //    printResultV2()
     val lines = File(inputPath).readLines()
@@ -27,173 +41,215 @@ fun main() {
     for (line in lines) {
         val regularLine = line.split("").filter { it.isNotBlank() }.toMutableList()
         inputs.add(regularLine)
-        val tripledLine = repeatThree(regularLine)
-        inputs2.add(tripledLine)
     }
-    for (line in lines) {
-        val regularLine = line.split("").filter { it.isNotBlank() }.toMutableList()
-        val tripledLine = repeatThree(regularLine)
-        inputs2.add(tripledLine)
-    }
-    for (line in lines) {
-        val regularLine = line.split("").filter { it.isNotBlank() }.toMutableList()
-        val tripledLine = repeatThree(regularLine)
-        inputs2.add(tripledLine)
+    for (i in 1..5) {
+        for (line in lines) {
+            val regularLine = line.split("").filter { it.isNotBlank() }.toMutableList()
+            val fiveTimesLine = repeatFive(regularLine)
+            inputs2.add(fiveTimesLine)
+        }
     }
 
-    println("v1=${solutionV1(inputs2)}")
-    // zwiększamy do 3x3, patrzymy dzielimy na 3x3 kafelki i liczymy ile tam jest rzeczy.
+    println("v1=${solutionV1(inputs2)} for maxSteps=$maxNumberOfSteps")
+    // zwiększamy do 5x5, patrzymy dzielimy na 3x3 kafelki i liczymy ile tam jest rzeczy.
 
 //    println("v2=${solutionV2(inputs)}")
 }
 
-fun repeatThree(mutableList: MutableList<String>): MutableList<String> {
+fun repeatFive(mutableList: MutableList<String>): MutableList<String> {
     val result = mutableList.toMutableList()
+    result.addAll(mutableList)
+    result.addAll(mutableList)
     result.addAll(mutableList)
     result.addAll(mutableList)
     return result
 }
 
-fun printResultV2() {
-    val left = 5479.toBigInteger()
-    val right = 5508.toBigInteger()
-    val up = 5515.toBigInteger()
-    val down = 5472.toBigInteger()
-    val edgesUpRight = 202300.toBigInteger() * 971.toBigInteger()
-    val edgesUpLeft = 202300.toBigInteger() * 951.toBigInteger()
-    val edgesDownRight = 202300.toBigInteger() * 944.toBigInteger()
-    val edgesDownLeft = 202300.toBigInteger() * 935.toBigInteger()
-    val numberOfSquares = (202299.toBigInteger() * 202300.toBigInteger()) / 2.toBigInteger()
-
-    val oddFullSquare = 7252.toBigInteger()
-    val evenFullSquare = 7232.toBigInteger()
-
-    val odd = numberOfSquares * TWO * oddFullSquare
-    val even = numberOfSquares * TWO * evenFullSquare
-
-    val nieparzyste = (202299.toBigInteger().div(TWO) + ONE) * 4.toBigInteger() * oddFullSquare
-    val parzyste = (202299.toBigInteger().div(TWO)) * 4.toBigInteger() * evenFullSquare
-
-    println(left + right + up + down + edgesUpRight + edgesUpLeft + edgesDownRight + edgesDownLeft + odd + even + nieparzyste + parzyste)
-
-}
-
 fun solutionV1(inputs: MutableList<MutableList<String>>): Int {
-//    val startingPoint = 0 to 0  //up left
-//    val startingPoint = 130 to 0 //down left
-//    val startingPoint = 130 to 130 //down right
-//    val startingPoint = 0 to 130 //up right
-    val startingPoint = (131 + 65) to (131 + 65)
-
     // 202300 map w prawo, lewo, górę i dół
     // 65 stepów i dochodzimy do każdej ściany mapy.
     // 202300 * 131 - jesteśmy w stanie dojść do końca każdej następnej z 202300 map
     // one są na zmiane parzyste/nie parzyste
 
-    val maxNumberOfSteps = (65 + 131).toBigInteger()
-    val checked = mutableMapOf<Pair<Int, Int>, BigInteger>()
+    //x = 0 (65+0*131), 3725 // 3725 // 3542
+    //x = 1 (65+1*131), 32346 // 32346 // 32896
+    //x = 2 (65+2*131), 91055 // 91055 // 90138
+    //y = 15044 x^2 + 13577 x + 3725
+    // f(202300)=
 
-    fun calculateSteps(point: Pair<Int, Int>, steps: BigInteger) {
-        val (y, x) = point
-        val field = inputs.getOrNull(y)?.getOrNull(x)
-        if (field == "#" || field == null) {
-            return
-        }
+    //65 , f(0) => 3725
+    //196, f(1) => 32896
+    //327, f(2) => 91055
+    //458, f(3) => 178202
+    //589, f(4) => 294337
+    //26501365 = 65 + 202300 * 131
+    // f(202300) = ?
+
+    quadraticFormula(3725, 32896, 91055)
+
+
+//    val x = 202300.toBigInteger()
+//    val a = 15044.toBigInteger()
+//    val b = 13577.toBigInteger()
+//    val c = 3725.toBigInteger()
+//    println(a * x.pow(2) + b * x + c)
+//
+//    val x = 202300.toBigInteger()
+//    val a = 13944.toBigInteger()
+//    val b = 15410.toBigInteger()
+//    val c = 3542.toBigInteger()
+//    println(a * x.pow(2) + b * x + c)
+//y = 13944 x^2 + 15410 x + 3542
+//    throw RuntimeException("lets go")
+    val checked = mutableMapOf<Pair<Int, Int>, Int>()
+
+    fun calculateSteps(point: Pair<Int, Int>, steps: Int) {
         if (steps > maxNumberOfSteps) {
             return
         }
-        if ((checked[point] ?: Int.MAX_VALUE.toBigInteger()) <= steps) {
+        var (y, x) = point
+        while (y < 0) {
+            y += boardSize
+        }
+        while (y >= boardSize) {
+            y -= boardSize
+        }
+        while (x < 0) {
+            x += boardSize
+        }
+        while (x >= boardSize) {
+            x -= boardSize
+        }
+        val field = inputs.getOrNull(y)?.getOrNull(x)!!
+        if (field == "#") {
+            return
+        }
+        if ((checked[point] ?: Int.MAX_VALUE) <= steps) {
             return
         }
         checked[point] = steps
 
-        calculateSteps(point.up(), steps + ONE)
-        calculateSteps(point.down(), steps + ONE)
-        calculateSteps(point.right(), steps + ONE)
-        calculateSteps(point.left(), steps + ONE)
+        calculateSteps(point.up(), steps + 1)
+        calculateSteps(point.right(), steps + 1)
+        calculateSteps(point.down(), steps + 1)
+        calculateSteps(point.left(), steps + 1)
     }
 
-    calculateSteps(startingPoint, ZERO)
+    calculateSteps(startingPoint, 0)
 
-    divideInto3by3(inputs, checked)
+    divideInto5by5(inputs, checked)
 
-    val evenSteps =
-        checked.filter { it.value <= maxNumberOfSteps }.filter { it.value.remainder(2.toBigInteger()) == ONE }
-    val unique = evenSteps.map { it.key }.toSet()
+    val oddSteps = checked.filter { it.value % 2 == maxNumberOfSteps % 2 }
+    val unique = oddSteps.map { it.key }.toSet()
     val result = unique.size
     return result
 }
 
-fun divideInto3by3(
+fun quadraticFormula(x0: Int, x1: Int, x2: Int) {
+    val c = x0.toBigInteger()
+    val a = ((x2 - 2 * x1 + x0) / 2).toBigInteger()
+    val b = (x1 - x0 - a.toInt()).toBigInteger()
+
+    println("a=$a")
+    println("b=$b")
+    println("c=$c")
+
+    val x = 202300.toBigInteger()
+
+    val quadraticFormulaBiatch = a * x * x + b * x + c
+    println("res=$quadraticFormulaBiatch")
+}
+
+
+fun divideInto5by5(
     inputs: MutableList<MutableList<String>>,
-    testChecked: MutableMap<Pair<Int, Int>, BigInteger>
+    testChecked: MutableMap<Pair<Int, Int>, Int>
 ) {
     println("start")
-    val checked = testChecked.filter { it.value <= (65 + 131).toBigInteger() }.toMutableMap()
-    val up = inputs.subList(0, 131)
-    val mid = inputs.subList(131, 262)
-    val bot = inputs.subList(262, 393)
+    val checked = testChecked.filter { it.value <= (boardSize / 2 + 2 * boardSize) }.toMutableMap()
+    val coordsToShape = calculateBlocks(inputs)
 
-    val leftUp = mutableListOf<MutableList<String>>()
-    val midUp = mutableListOf<MutableList<String>>()
-    val rightUp = mutableListOf<MutableList<String>>()
-    for (row in up) {
-        leftUp.add(row.subList(0, 131))
-        midUp.add(row.subList(131, 262))
-        rightUp.add(row.subList(262, 393))
-    }
-    val leftMid = mutableListOf<MutableList<String>>()
-    val midMid = mutableListOf<MutableList<String>>()
-    val rightMid = mutableListOf<MutableList<String>>()
-    for (row in mid) {
-        leftMid.add(row.subList(0, 131))
-        midMid.add(row.subList(131, 262))
-        rightMid.add(row.subList(262, 393))
-    }
-    val leftDown = mutableListOf<MutableList<String>>()
-    val midDown = mutableListOf<MutableList<String>>()
-    val rightDown = mutableListOf<MutableList<String>>()
-    for (row in bot) {
-        leftDown.add(row.subList(0, 131))
-        midDown.add(row.subList(131, 262))
-        rightDown.add(row.subList(262, 393))
-    }
-    println("leftUp:")
-    leftUp.prettyPrint(checked, "left", "up")
-    println("midUp:")
-    midUp.prettyPrint(checked, "mid", "up")
-    println("rightUp:")
-    rightUp.prettyPrint(checked, "right", "up")
-    println("leftMid:")
-    leftMid.prettyPrint(checked, "left", "mid")
-    println("midMid:")
-    midMid.prettyPrint(checked, "mid", "mid")
-    println("rightMid:")
-    rightMid.prettyPrint(checked, "right", "mid")
-    println("leftDown:")
-    leftDown.prettyPrint(checked, "left", "down")
-    println("midDown:")
-    midDown.prettyPrint(checked, "mid", "down")
-    println("rightDown:")
-    rightDown.prettyPrint(checked, "right", "down")
+    fun numberOfGardens(
+        pair: Pair<Int, Int>,
+        even: Boolean = true
+    ): BigInteger {
+        val shiftX = pair.second * boardSize
+        val shiftY = pair.first * boardSize
+        val map = coordsToShape[pair]!!
 
-    val corners = numberOfGardens(leftMid, checked, column = "left", row = "mid", even = false) +
-            numberOfGardens(midUp, checked, column = "mid", row = "up", even = false) +
-            numberOfGardens(rightMid, checked, column = "right", row = "mid", even = false) +
-            numberOfGardens(midDown, checked, column = "mid", row = "down", even = false)
+        var sum = ZERO
+        for ((y, row) in map.withIndex()) {
+            for ((x, char) in row.withIndex()) {
+                if (even) {
+                    val cell = checked[y + shiftY to x + shiftX]
+                    if (cell != null && cell.toInt() % 2 == 0 && (char == "." || char == "S")) {
+                        sum += ONE
+                    }
+                } else {
+                    val cell = checked[y + shiftY to x + shiftX]
+                    if (cell != null && cell.toInt() % 2 != 0 && (char == "." || char == "S")) {
+                        sum += ONE
+                    }
+                }
+            }
+        }
+
+        return sum
+    }
+
+    val corners = numberOfGardens(0 to 2, even = false) +
+            numberOfGardens(2 to 0, even = false) +
+            numberOfGardens(4 to 2, even = false) +
+            numberOfGardens(2 to 4, even = false)
     val edges = 202300.toBigInteger() * // there are 202300 edges of each type
-            (numberOfGardens(leftUp, checked, even = true, "left", "up") +
-                    numberOfGardens(rightUp, checked, even = true, "right", "up") +
-                    numberOfGardens(leftDown, checked, even = true, "left", "down") +
-                    numberOfGardens(rightDown, checked, even = true, "right", "down"))
+            (numberOfGardens(1 to 0, even = true) +
+                    numberOfGardens(1 to 4, even = true) +
+                    numberOfGardens(4 to 1, even = true) +
+                    numberOfGardens(4 to 3, even = true))
+    val nearlyFull = 202299.toBigInteger() * // there are 202299 that are 7/8 full of each type
+            (numberOfGardens(1 to 1, even = false) +
+                    numberOfGardens(1 to 3, even = false) +
+                    numberOfGardens(3 to 1, even = false) +
+                    numberOfGardens(3 to 3, even = false))
 
-    val fullEven = numberOfGardens(midMid, checked, even = true, "mid", "mid")
-    val fullOdd = numberOfGardens(midMid, checked, even = false, "mid", "mid")
+    val fullEven = numberOfGardens(2 to 2, even = true)
+    val fullOdd = numberOfGardens(2 to 2, even = false)
+
+//    println("Looks like a=${fullEven + fullOdd}")
+//    println("Looks like b=${fullEven + fullOdd}")
+//    println("Looks like c=${fullEven + fullOdd}")
 
     val evenSquares = calculateEvenSquares()
     val oddSquares = calculateOddSquares()
-    val result = corners + edges + fullEven * evenSquares + fullOdd * oddSquares
+    val result = corners + edges + nearlyFull +
+            fullEven * evenSquares +
+            fullOdd * oddSquares
     println("END RESULT = $result")
+}
+
+private fun calculateBlocks(inputs: MutableList<MutableList<String>>): MutableMap<Pair<Int, Int>, MutableList<MutableList<String>>> {
+    val rowBasedChunked = inputs.chunked(boardSize)
+    val coordsToShape = mutableMapOf<Pair<Int, Int>, MutableList<MutableList<String>>>()
+
+    for ((y, row) in rowBasedChunked.withIndex()) {
+        //row - 131 list które oznaczają 131 wierszy
+        for (x in 0..4) {
+            coordsToShape[y to x] = mutableListOf()
+        }
+        for ((_, rowOfRow) in row.withIndex()) {
+            rowOfRow.chunked(boardSize)
+                .map { it.toMutableList() }
+                .forEachIndexed { index, strings -> coordsToShape[y to index]!!.add(strings) }
+        }
+    }
+    return coordsToShape
+}
+
+private fun MutableMap<Pair<Int, Int>, MutableList<MutableList<String>>>.prettyPrint(
+    pair: Pair<Int, Int>,
+    checked: MutableMap<Pair<Int, Int>, BigInteger>
+) {
+    this[pair]!!.prettyPrint(checked, pair)
 }
 
 fun calculateEvenSquares(): BigInteger {
@@ -204,8 +260,8 @@ fun calculateEvenSquares(): BigInteger {
     val n = (an - a1) / r + ONE
     val sum = (a1 + an) * n / TWO
 
-    val oddInBiggestRow = ((202299 * 2 + 1).toBigInteger() / TWO) + ONE
-    val result = sum * TWO - oddInBiggestRow
+    val evenInBiggestRow = ((202299 - 1) / 2 + 1).toBigInteger() * TWO
+    val result = sum * TWO - evenInBiggestRow
 
     return result
 }
@@ -218,8 +274,8 @@ fun calculateOddSquares(): BigInteger {
     val n = (an - a1) / r + ONE
     val sum = (a1 + an) * n / TWO
 
-    val evenInBiggestRow = (202299 * 2 + 1).toBigInteger() / TWO
-    val result = sum * TWO - evenInBiggestRow
+    val oddInBiggestRow = ((202298 - 2) / 2 + 1).toBigInteger() * TWO + ONE
+    val result = sum * TWO - oddInBiggestRow
 
     return result
 }
@@ -230,65 +286,15 @@ fun preCheck(actual: Int, expected: Int) {
     }
 }
 
-private fun numberOfGardens(
-    map: MutableList<MutableList<String>>,
-    myMap: MutableMap<Pair<Int, Int>, BigInteger>,
-    even: Boolean = true,
-    column: String,
-    row: String
-): BigInteger {
-    val shiftX = when (column) {
-        "left" -> 0
-        "mid" -> 131
-        "right" -> 262
-        else -> throw RuntimeException("bad shift")
-    }
-    val shiftY = when (row) {
-        "up" -> 0
-        "mid" -> 131
-        "down" -> 262
-        else -> throw RuntimeException("bad shift")
-    }
-
-    var sum = ZERO
-    for ((y, row) in map.withIndex()) {
-        for ((x, char) in row.withIndex()) {
-            if (even) {
-                val cell = myMap[y + shiftY to x + shiftX]
-                if (cell != null && cell.toInt() % 2 == 0 && (char == "." || char == "S")) {
-                    sum += ONE
-                }
-            } else {
-                val cell = myMap[y + shiftY to x + shiftX]
-                if (cell != null && cell.toInt() % 2 != 0 && (char == "." || char == "S")) {
-                    sum += ONE
-                }
-            }
-        }
-    }
-
-    return sum
-}
 
 private fun <String> List<List<String>>.prettyPrint(
     checked: MutableMap<Pair<Int, Int>, BigInteger>,
-    column: kotlin.String,
-    row: kotlin.String
+    shift: Pair<Int, Int>
 ) {
-    //column: left, mid, right
-    //row: up, mid, down
-    val shiftX = when (column) {
-        "left" -> 0
-        "mid" -> 131
-        "right" -> 262
-        else -> throw RuntimeException("bad shift")
-    }
-    val shiftY = when (row) {
-        "up" -> 0
-        "mid" -> 131
-        "down" -> 262
-        else -> throw RuntimeException("bad shift")
-    }
+    val (yMultiplier, xMultiplier) = shift
+    println("Printing for multiplier: y=$yMultiplier, x=$xMultiplier")
+    val shiftX = boardSize * xMultiplier //0-4
+    val shiftY = boardSize * yMultiplier
 
     for ((y, row) in this.withIndex()) {
         for ((x, char) in row.withIndex()) {
