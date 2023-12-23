@@ -15,7 +15,7 @@ fun main() {
         val regularLine = line.split("").filter { it.isNotBlank() }.toMutableList()
         inputs.add(regularLine)
     }
-//    calculateSolutionV1(inputs)
+    calculateSolutionV1(inputs)
     calculateSolutionV2(inputs)
 }
 
@@ -65,7 +65,7 @@ private fun calculateNodes(
     nodes.add(end)
 
     for ((y, row) in grid.withIndex()) {
-        for ((x, char) in row.withIndex()) {
+        for ((x, _) in row.withIndex()) {
             val pair = y to x
             if (grid.getOrNull(pair) != ".") {
                 continue
