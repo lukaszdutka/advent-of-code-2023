@@ -30,6 +30,39 @@ fun calculateSolutionV1(lines: List<String>) {
 
     checkForNonMaxFallenBricks(bricks)
 
+    println("Result part 1: ${calculateResultForPart1(bricks, supportsMap, supportedByMap)}")
+    println("Result part 2: ${calculateResultForPart2(bricks)}")
+}
+
+private fun calculateResultForPart2(bricks: List<Brick>): Long {
+    var result = 0L
+    for (brick in bricks) {
+        val newList = bricks.filter { it.id != brick.id }.map { it.copy() }.toMutableList()
+        result += howMuchCanFall(newList)
+    }
+    return result
+}
+
+fun howMuchCanFall(bricks: MutableList<Brick>): Long {
+    var count = 0L
+    for (brick in bricks) {
+        if (brick.zStart > 1) {
+            brick.fall()
+            if (!brick.intersectWithAny(bricks)) {
+                count++
+            } else {
+                brick.fall(-1)
+            }
+        }
+    }
+    return count
+}
+
+private fun calculateResultForPart1(
+    bricks: List<Brick>,
+    supportsMap: MutableMap<Int, MutableList<Int>>,
+    supportedByMap: MutableMap<Int, MutableList<Int>>
+): Int {
     var count = 0
     for (brick in bricks) {
         "Counting result for: ${brick.id}".print()
@@ -47,7 +80,7 @@ fun calculateSolutionV1(lines: List<String>) {
             count++
         }
     }
-    println(count)
+    return count
 }
 
 private fun dropBricks(
@@ -126,6 +159,8 @@ data class Brick(
         zEnd -= amount
     }
 
+    fun intersectWithAny(bricks: MutableList<Brick>) = bricks.any { it.intersect(this) }
+
     fun intersect(other: Brick): Boolean {
         if (id == other.id) {
             return false
@@ -142,3 +177,19 @@ fun preCheck(actual: Any, expected: Any) {
         throw RuntimeException("actual=$actual, expected=$expected")
     }
 }
+
+
+//    val cachedFalls = mutableMapOf<Int, Long>() //id to number of bricks
+//    fun calculateFallenIfDisintegrated(brickId: Int): Long {
+//        if (brickId in cachedFalls) {
+//            return cachedFalls[brickId]!!
+//        }
+//        val myBrickSupportsThose = supportsMap[brickId]!!
+//        if (myBrickSupportsThose.size == 0) {
+//            return 0
+//        }
+//        val theOnlySupportIsThisOne = myBrickSupportsThose.filter { supportedByMap[it]!!.size == 1 }
+//        cachedFalls[brickId] = theOnlySupportIsThisOne.size.toLong() +
+//                theOnlySupportIsThisOne.sumOf { calculateFallenIfDisintegrated(it) }
+//        return cachedFalls[brickId]!!
+//    }
