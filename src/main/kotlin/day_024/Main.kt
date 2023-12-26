@@ -1,10 +1,13 @@
 package day_024
 
+import day_008.lcm
 import java.io.File
 import java.math.BigDecimal
 import java.math.BigDecimal.ONE
 import java.math.BigDecimal.ZERO
+import java.math.BigInteger
 import java.math.MathContext
+import kotlin.math.max
 
 
 private const val inputPath =
@@ -14,7 +17,55 @@ private const val inputPath =
 fun main() {
     val lines = File(inputPath).readLines()
 
-    calculateSolutionV1(lines.map { it.toPoint() })
+    val points = lines.map { it.toPoint() }
+
+//    calculateSolutionV1(points)
+    calculateSolutionPart2(points)
+}
+
+fun calculateSolutionPart2(points: List<Object2D>) {
+    val (x, y, xv, yv) = points[0]
+    val (x2, y2, xv2, yv2) = points[1]
+
+    val speedRange = -1000..1000
+
+    val sortedByX = points.sortedBy { it.x }
+    //it's one step before
+
+    println("LOOP")
+    for (speedInt in speedRange) {
+        val speed = speedInt.toBigDecimal()
+//        val x0 = x + (xv - speed)*t1
+        val divisor = xv2 - speed
+        if (divisor != ZERO) {
+            val t1 = (x2 - x + (xv - speed)).divide(divisor, MathContext.DECIMAL128)
+//            if (max(0, t1.stripTrailingZeros().scale()) <= 4) {
+//            println("$speed => t1=$t1.")
+            val distanceNeeded = (x + xv * t1 - x2 + xv2 * t1)
+            if (distanceNeeded % t1 == ZERO) {
+                println("distance: $distanceNeeded can be done with speed: ${distanceNeeded / t1}")
+            }
+//            }
+        } else {
+            println("Zero for speed $speed")
+        }
+    }
+
+    //277903024391745, 368934106615824, 298537551311799 @ -118, -107, 62
+    //183412557215942, 418647008376557, 219970939624628 @ 72, -215, 133
+
+    //for speed = 214
+    //it needs to go through
+    //x + xv*t = x0 + 214*t
+    //183412557215942 + 72t = x0 + 214t
+    //x0 = 183412557215942 + (72-214)t1
+    //x0 = 277903024391745 + (-118-214)t2
+    //t1 = ( 277903024391745 - 183412557215942 + (-118-214)t2 ) / (72-214)
+    //
+
+    val number = x.toBigInteger()
+
+//    println("x - x1 = ${x - x1}")
 }
 
 private fun String.toPoint(): Object2D {
@@ -31,7 +82,6 @@ fun calculateSolutionV1(list: List<Object2D>) {
     val upperBound = BigDecimal.valueOf(400000000000000L)
 //    val lowerBound = BigDecimal.valueOf(7L)
 //    val upperBound = BigDecimal.valueOf(27L)
-
     var count = 0
     for (i in list.indices) {
         for (j in i + 1..<list.size) {

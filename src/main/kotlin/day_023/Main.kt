@@ -24,7 +24,6 @@ fun main() {
 
 fun calculateSolutionV2(grid: Grid) {
     grid.replaceAll(listOf(">", "<", "v", "^"), ".")
-
     val start = Point(0, 1)
     val end = Point(grid.size - 1, grid.size - 2)
 
@@ -32,7 +31,6 @@ fun calculateSolutionV2(grid: Grid) {
         (input == "." && Point(y, x).neighbours()
             .mapNotNull { grid.getOrNull(it) }.filter { it != "#" }.size > 2)
     }
-
     val edges = calculateEdges(nodes, grid)
 
 
@@ -52,7 +50,7 @@ fun calculateSolutionV2(grid: Grid) {
             if (neighbourCoords in visited) {
                 continue
             }
-            val newVisited = visited.toMutableSet()
+            val newVisited = visited.toMutableSet() //todo refactor copying "visited" into stack, maybe it's possible to make it faster this way.
             newVisited.add(neighbourCoords)
             paths.add(calculateLongestDistance(neighbourCoords, steps + moreSteps, newVisited))
         }
